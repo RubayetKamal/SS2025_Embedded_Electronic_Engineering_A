@@ -21,24 +21,25 @@ jobs:
           root_file: main.tex
           latexmk_use_lualatex: false
           latexmk_shell_escape: true
+          latexmk_args: '-jobname="Low Power Scheduling for High-Level Synthesis"'
 
       - name: Upload compiled PDF
         uses: actions/upload-artifact@v4
         with:
           name: main-pdf
-          path: main.pdf
+          path: "Low Power Scheduling for High-Level Synthesis.pdf"
 
       - name: Move compiled PDF to folder
         run: |
-          mkdir -p compiled_pdfs
-          mv main.pdf compiled_pdfs/main.pdf
-          
+          mkdir -p Paper_pdf
+          mv "Low Power Scheduling for High-Level Synthesis.pdf" Paper_pdf/
+
       - name: Commit compiled PDF back to repository
         uses: EndBug/add-and-commit@v9
         with:
           author_name: "GitHub Actions"
           author_email: "actions@github.com"
           message: "Add compiled PDF"
-          add: "compiled_pdfs/main.pdf"
+          add: "compiled_pdfs/Low Power Scheduling for High-Level Synthesis.pdf"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
