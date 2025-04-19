@@ -11,7 +11,7 @@ My Topic: **Multicore Partition-Based Scheduling**
 Similar to the Real-Time Systems course, each student is required to write a paper in IEEE format on a specific topic.
 My Topic: **Low Power Scheduling for High-Level Synthesis**
 
-Each of the above topics is documented in its respective .tex file, located in the root directory. These files are auto-updated and compiled into a final PDF stored in the Compiled_PDF/ folder.
+Each of the above topics is documented in its respective .tex file, located in their respective course directory. These files are auto-updated and compiled into a final PDF stored in the Compiled_PDF/ folder.
 
 🧪 Lab Work
 The theoretical knowledge from both sub-courses is applied in a lab project. The lab is carried out in teams of three and focuses on practical implementation.
