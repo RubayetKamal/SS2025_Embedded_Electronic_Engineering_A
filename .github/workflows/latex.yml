@@ -48,4 +48,4 @@ jobs:
           fi
 
       - name: Upload all PDFs
-        uses: actions/upload-artifact@v
+        uses: actions/upload-artifact@v4
