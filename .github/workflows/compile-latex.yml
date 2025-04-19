@@ -20,7 +20,7 @@ jobs:
       - name: Install LaTeX dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y texlive-latex-recommended texlive-fonts-recommended latexmk
+          sudo apt-get install -y texlive-latex-recommended texlive-fonts-recommended texlive-publishers latexmk
 
       - name: Compile LaTeX files in "Hardware Software Co Design"
         run: |
