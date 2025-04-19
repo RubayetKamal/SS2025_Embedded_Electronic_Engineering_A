@@ -26,21 +26,25 @@ jobs:
         run: |
           mkdir -p "Hardware Software Co Design/Compiled PDF"
           cd "Hardware Software Co Design"
+          shopt -s nullglob  # Handle cases with no .tex files
           for tex_file in *.tex; do
             latexmk -pdf -interaction=nonstopmode "$tex_file"
             mv "${tex_file%.tex}.pdf" "Compiled PDF/"
             latexmk -c
           done
+          shopt -u nullglob
 
       - name: Compile LaTeX files in "Real Time Systems"
         run: |
           mkdir -p "Real Time Systems/Compiled PDF"
           cd "Real Time Systems"
+          shopt -s nullglob  # Handle cases with no .tex files
           for tex_file in *.tex; do
             latexmk -pdf -interaction=nonstopmode "$tex_file"
             mv "${tex_file%.tex}.pdf" "Compiled PDF/"
             latexmk -c
           done
+          shopt -u nullglob
 
       - name: Commit and push PDFs
         run: |
