@@ -1,0 +1,47 @@
+name: Build All LaTeX Documents
+
+on:
+  push:
+    paths:
+      - '**.tex'
+      - '**.bib'
+  workflow_dispatch:
+
+jobs:
+  build-all:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile all LaTeX files
+        run: |
+          mkdir -p Paper_pdf
+          for file in $(find . -name "*.tex"); do
+            echo "Compiling $file..."
+            latexmk -pdf -shell-escape -interaction=nonstopmode -output-directory=$(dirname "$file") "$file" || true
+            PDF_NAME=$(basename "$file" .tex).pdf
+            PDF_PATH="$(dirname "$file")/$PDF_NAME"
+            if [ -f "$PDF_PATH" ]; then
+              mv "$PDF_PATH" Paper_pdf/
+            else
+              echo "⚠️ Failed to compile $file"
+            fi
+          done
+
+      - name: Upload all PDFs
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-pdfs
+          path: Paper_pdf/
+
+      - name: Commit PDFs to repository
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: "GitHub Actions"
+          author_email: "actions@github.com"
+          message: "Add compiled PDFs"
+          add: "Paper_pdf/*.pdf"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
