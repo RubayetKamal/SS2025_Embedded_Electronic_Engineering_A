@@ -5,8 +5,8 @@ This repository contains the written coursework for the Special Emphasis module:
 📚 Course Structure
 1. Real-Time Systems:
 Each student is assigned a topic to research and write a scientific paper in IEEE format.
-My Topic: **Multicore Partition-Based Scheduling
-**
+My Topic: **Multicore Partition-Based Scheduling**
+
 2. Hardware-Software Co-Design:
 Similar to the Real-Time Systems course, each student is required to write a paper in IEEE format on a specific topic.
 My Topic: **Low Power Scheduling for High-Level Synthesis**
