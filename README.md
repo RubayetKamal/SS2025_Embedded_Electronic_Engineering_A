@@ -3,11 +3,11 @@ Special Emphasis - Embedded Electronic Engineering A (6th Semester)
 This repository contains the written coursework for the Special Emphasis module: Embedded Electronic Engineering A, chosen in the 6th semester. The course is divided into two theoretical sub-courses and a practical lab where the concepts are implemented in a group setting.
 
 📚 Course Structure
-1. Real-Time Systems
+1. Real-Time Systems:
 Each student is assigned a topic to research and write a scientific paper in IEEE format.
 My Topic: Multicore Partition-Based Scheduling
 
-2. Hardware-Software Co-Design
+2. Hardware-Software Co-Design:
 Similar to the Real-Time Systems course, each student is required to write a paper in IEEE format on a specific topic.
 My Topic: Low Power Scheduling for High-Level Synthesis
 
