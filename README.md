@@ -1,4 +1,5 @@
 Special Emphasis - Embedded Electronic Engineering A (6th Semester)
+
 This repository contains the written coursework for the Special Emphasis module: Embedded Electronic Engineering A, chosen in the 6th semester. The course is divided into two theoretical sub-courses and a practical lab where the concepts are implemented in a group setting.
 
 📚 Course Structure
