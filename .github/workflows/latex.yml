@@ -22,8 +22,9 @@ jobs:
         run: |
           mkdir -p Paper_pdf
           COMPILED_COUNT=0
+          IFS=$'\n' # Ensure filenames with spaces are handled
           for file in $(find . -name "*.tex"); do
-            echo "🛠 Compiling $file..."
+            echo "🛠 Compiling \"$file\"..."
             latexmk -pdf -shell-escape -interaction=nonstopmode -output-directory="$(dirname "$file")" "$file"
             PDF_NAME="$(basename "$file" .tex).pdf"
             PDF_PATH="$(dirname "$file")/$PDF_NAME"
@@ -33,7 +34,7 @@ jobs:
               mv "$PDF_PATH" Paper_pdf/
               COMPILED_COUNT=$((COMPILED_COUNT + 1))
             else
-              echo "❌ Failed to compile $file"
+              echo "❌ Failed to compile \"$file\""
             fi
           done
 
