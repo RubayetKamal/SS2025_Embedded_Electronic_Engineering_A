@@ -15,24 +15,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Find main .tex file
+        id: findtex
+        run: |
+          # Find the first .tex file in the repo
+          TEX_FILE=$(find . -name "*.tex" | head -n 1)
+          echo "Found TeX file: $TEX_FILE"
+          echo "texfile=$TEX_FILE" >> $GITHUB_OUTPUT
+          PDF_NAME=$(basename "$TEX_FILE" .tex).pdf
+          echo "pdfname=$PDF_NAME" >> $GITHUB_OUTPUT
+
       - name: Compile LaTeX document
         uses: xu-cheng/latex-action@v2
         with:
-          root_file: main.tex
+          root_file: ${{ steps.findtex.outputs.texfile }}
           latexmk_use_lualatex: false
           latexmk_shell_escape: true
-          latexmk_args: '-jobname="Low Power Scheduling for High-Level Synthesis"'
 
       - name: Upload compiled PDF
         uses: actions/upload-artifact@v4
         with:
-          name: main-pdf
-          path: "Low Power Scheduling for High-Level Synthesis.pdf"
+          name: compiled-pdf
+          path: ${{ steps.findtex.outputs.pdfname }}
 
       - name: Move compiled PDF to folder
         run: |
           mkdir -p Paper_pdf
-          mv "Low Power Scheduling for High-Level Synthesis.pdf" Paper_pdf/
+          mv "${{ steps.findtex.outputs.pdfname }}" Paper_pdf/
 
       - name: Commit compiled PDF back to repository
         uses: EndBug/add-and-commit@v9
@@ -40,6 +49,6 @@ jobs:
           author_name: "GitHub Actions"
           author_email: "actions@github.com"
           message: "Add compiled PDF"
-          add: "compiled_pdfs/Low Power Scheduling for High-Level Synthesis.pdf"
+          add: "Paper_pdf/${{ steps.findtex.outputs.pdfname }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
