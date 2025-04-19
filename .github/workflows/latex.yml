@@ -15,11 +15,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-- name: Install LaTeX tools
-  run: sudo apt-get update && sudo apt-get install -y \
-         texlive-latex-extra \
-         texlive-publishers \
-         latexmk
+      - name: Install LaTeX tools
+        run: sudo apt-get update && sudo apt-get install -y \
+               texlive-latex-extra \
+               texlive-publishers \
+               latexmk
 
       - name: Compile all LaTeX files
         run: |
@@ -48,18 +48,4 @@ jobs:
           fi
 
       - name: Upload all PDFs
-        uses: actions/upload-artifact@v4
-        with:
-          name: compiled-pdfs
-          path: Paper_pdf/
-
-      - name: Commit PDFs to repository
-        if: success()
-        uses: EndBug/add-and-commit@v9
-        with:
-          author_name: "GitHub Actions"
-          author_email: "actions@github.com"
-          message: "Add compiled PDFs"
-          add: "Paper_pdf"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/upload-artifact@v
