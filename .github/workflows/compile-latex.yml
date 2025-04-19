@@ -9,6 +9,9 @@ on:
 jobs:
   compile-latex:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Allow pushing changes
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -16,6 +19,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true  # Retain credentials for git push
 
       - name: Install LaTeX dependencies
         run: |
@@ -26,7 +30,7 @@ jobs:
         run: |
           mkdir -p "Hardware Software Co Design/Compiled PDF"
           cd "Hardware Software Co Design"
-          shopt -s nullglob  # Handle cases with no .tex files
+          shopt -s nullglob
           for tex_file in *.tex; do
             latexmk -pdf -interaction=nonstopmode "$tex_file"
             mv "${tex_file%.tex}.pdf" "Compiled PDF/"
@@ -38,7 +42,7 @@ jobs:
         run: |
           mkdir -p "Real Time Systems/Compiled PDF"
           cd "Real Time Systems"
-          shopt -s nullglob  # Handle cases with no .tex files
+          shopt -s nullglob
           for tex_file in *.tex; do
             latexmk -pdf -interaction=nonstopmode "$tex_file"
             mv "${tex_file%.tex}.pdf" "Compiled PDF/"
@@ -50,7 +54,6 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add --all
           git commit -m "Auto-compiled PDFs" || echo "No changes to commit"
           git push
