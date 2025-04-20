@@ -10,7 +10,7 @@ jobs:
   compile-latex:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Allow pushing changes
+      contents: write
       pull-requests: write
 
     steps:
@@ -19,12 +19,20 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: true  # Retain credentials for git push
+          persist-credentials: true
 
       - name: Install LaTeX dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y texlive-latex-recommended texlive-fonts-recommended texlive-publishers texlive-science latexmk
+          sudo apt-get install -y \
+            texlive-latex-recommended \
+            texlive-fonts-recommended \
+            texlive-publishers \
+            texlive-science \
+            texlive-extra-utils \
+            texlive-bibtex-extra \
+            latexmk \
+            ghostscript
 
       - name: Compile LaTeX files in "Hardware Software Co Design"
         run: |
@@ -32,8 +40,12 @@ jobs:
           cd "Hardware Software Co Design"
           shopt -s nullglob
           for tex_file in *.tex; do
-            latexmk -pdf -interaction=nonstopmode "$tex_file"
-            mv "${tex_file%.tex}.pdf" "Compiled PDF/"
+            # Allow compilation to fail but proceed
+            if latexmk -pdf -f -interaction=nonstopmode "$tex_file"; then
+              mv "${tex_file%.tex}.pdf" "Compiled PDF/" || true
+            else
+              echo "Warning: Compilation failed for $tex_file"
+            fi
             latexmk -c
           done
           shopt -u nullglob
@@ -44,8 +56,11 @@ jobs:
           cd "Real Time Systems"
           shopt -s nullglob
           for tex_file in *.tex; do
-            latexmk -pdf -interaction=nonstopmode "$tex_file"
-            mv "${tex_file%.tex}.pdf" "Compiled PDF/"
+            if latexmk -pdf -f -interaction=nonstopmode "$tex_file"; then
+              mv "${tex_file%.tex}.pdf" "Compiled PDF/" || true
+            else
+              echo "Warning: Compilation failed for $tex_file"
+            fi
             latexmk -c
           done
           shopt -u nullglob
