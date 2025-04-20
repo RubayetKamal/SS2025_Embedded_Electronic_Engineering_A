@@ -40,11 +40,10 @@ jobs:
           cd "Hardware Software Co Design"
           shopt -s nullglob
           for tex_file in *.tex; do
-            # Allow compilation to fail but proceed
-            if latexmk -pdf -f -interaction=nonstopmode "$tex_file"; then
-              mv "${tex_file%.tex}.pdf" "Compiled PDF/" || true
-            else
-              echo "Warning: Compilation failed for $tex_file"
+            # Always attempt compilation and PDF move
+            latexmk -pdf -f -interaction=nonstopmode "$tex_file" || true
+            if [ -f "${tex_file%.tex}.pdf" ]; then
+              mv -v "${tex_file%.tex}.pdf" "Compiled PDF/" || true
             fi
             latexmk -c
           done
@@ -56,10 +55,10 @@ jobs:
           cd "Real Time Systems"
           shopt -s nullglob
           for tex_file in *.tex; do
-            if latexmk -pdf -f -interaction=nonstopmode "$tex_file"; then
-              mv "${tex_file%.tex}.pdf" "Compiled PDF/" || true
-            else
-              echo "Warning: Compilation failed for $tex_file"
+            # Always attempt compilation and PDF move
+            latexmk -pdf -f -interaction=nonstopmode "$tex_file" || true
+            if [ -f "${tex_file%.tex}.pdf" ]; then
+              mv -v "${tex_file%.tex}.pdf" "Compiled PDF/" || true
             fi
             latexmk -c
           done
