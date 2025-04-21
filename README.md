@@ -16,7 +16,7 @@ Each of the above topics is documented in its respective .tex file, located in t
 🧪 Lab Work
 The theoretical knowledge from both sub-courses is applied in a lab project. The lab is carried out in teams of three and focuses on practical implementation.
 
-🔗 View Lab Repository
+[ 🔗 ](/[guides/content/editing-an-existing-page#modifying-front-matter)](https://github.com/RubayetKamal/SS2025_SpecialEmphasis_Embedded_Lab_Team1)View Lab Repository
 
 
 <img width="1062" alt="image" src="https://github.com/user-attachments/assets/0f283063-8231-470a-b6a0-0c66b0f5d0c8" />
