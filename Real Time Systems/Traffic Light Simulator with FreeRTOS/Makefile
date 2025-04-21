@@ -19,7 +19,8 @@ SRC = \
     $(FREERTOS_SRC)/portable/MemMang/heap_4.c \
     $(FREERTOS_SRC)/portable/ThirdParty/GCC/Posix/port.c \
     $(FREERTOS_SRC)/portable/ThirdParty/GCC/Posix/utils/wait_for_event.c \
-    main.c
+    main.c \
+    FREERTOS_hooks.c
 
 OBJ = $(SRC:.c=.o)
 
