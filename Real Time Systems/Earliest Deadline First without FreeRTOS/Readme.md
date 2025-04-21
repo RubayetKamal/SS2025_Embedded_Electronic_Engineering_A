@@ -35,7 +35,7 @@ In the terminal, go to the directory where the file is located:
 cd ./Downloads/Earliest Deadline First without FreeRTOS
 ```
 
-3) Build the Files
+## 3) Build the Files
 Now, compile the source code to create the executable. Use the following command:
 
 ```bash
@@ -44,7 +44,7 @@ gcc main.c func_def.c -o main
 Why?
 This command compiles the source files (main.c and func_def.c) and links them to create an executable file named main.
 
-4) Run the File
+## 4) Run the File
 To run the simulation, execute the following command:
 
 ```bash
@@ -53,7 +53,7 @@ To run the simulation, execute the following command:
 
 This will run the simulation using the default parameters. Ensure everything is working as expected.
 
-5) Visualize the Results
+## 5) Visualize the Results
 Once the initial run works, execute the following command to visualize the task scheduling:
 
 ```bash
@@ -76,7 +76,7 @@ Arrival of Task 2
 
 And so on, for each task in the set.
 
-6) Gantt Diagram
+## 6) Gantt Diagram
 After running the command, a Gantt chart will be generated based on the EDF scheduling of your tasks.
 
 Example:
