@@ -2,6 +2,9 @@
 
 This project demonstrates the **Earliest Deadline First (EDF)** scheduling algorithm implemented using FreeRTOS in a simulated environment. This guide walks you through downloading the required repository, building the project, running the simulation, and visualizing the output using a Gantt chart.
 
+<img width="1402" alt="image" src="https://github.com/user-attachments/assets/4f5a973a-f322-4718-8e3a-02e9b0a3dcc9" />
+
+
 ---
 
 ## 📥 Setup Instructions
