@@ -10,9 +10,7 @@
 
 The EDF schedulability criterion is as follows:
 
-\[
-\sum_{i=1}^{n} \frac{C_i}{T_i} \leq 1
-\]
+Sum (C_i / T_i) for i = 1 to n <= 1
 
 Where:
 - \(C_i\) is the Worst Case Execution Time (WCET) of task \(i\),
