@@ -27,9 +27,7 @@ rubayet.kamal@stud.hshl.de}
 \maketitle
 
 \begin{abstract}
-This document is a model and instructions for \LaTeX.
-This and the IEEEtran.cls file define the components of your paper [title, text, heads, etc.]. *CRITICAL: Do Not Use Symbols, Special Characters, Footnotes, 
-or Math in Paper Title or Abstract.
+Systems with components of varying importance have high critical parts that need strong verification compared to low critical parts. Partitioning is the technique to separate different parts of a system both in time and space to prevent interference between those parts. Multicore system reduces the need for complex scheduling of tasks since each partition can run on a different core where the partitions are isolated but can still communicate between each other if needed. However, assigning tasks to different cores is NP hard, specially when we want to keep the core load balanced and the system predictable. This paper discusses the clustering-based task allocation strategy implemented in [1]. This strategy, which is implemented by scheduling with EDF, ensures that utlization factor is always less than 1 and ultimately reduces communication cost between cores.  
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -40,12 +38,23 @@ component, formatting, style, styling, insert
 This document is a model and instructions for \LaTeX.
 Please observe the conference page limits. 
 
-\section{Ease of Use}
+\section{Related Work}
 
+\subsection{Maintaining the Integrity of the Specifications}
 
+The IEEEtran class file is used to format your paper and style the text. All margins, 
+column widths, line spaces, and text fonts are prescribed; please do not 
+alter them. You may note peculiarities. For example, the head margin
+measures proportionately more than is customary. This measurement 
+and others are deliberate, using specifications that anticipate your paper 
+as one part of the entire proceedings, and not as an independent document. 
+Please do not revise any of the current designations.
 
-\section{Prepare Your Paper Before Styling}
+\section{Proposed Strategy and Algorithm}
 Before you begin to format your paper, first write and save the content as a 
+separate text file. Complete all content and organizational editing before 
+formatting. Please note sections \ref{AA}--\ref{SCM} below for more information on 
+proofreading, spelling and grammar.
 
 Keep your text and graphic files separate until after the text has been 
 formatted and styled. Do not number text heads---{\LaTeX} will do that 
@@ -65,7 +74,7 @@ abbreviations in the title or heads unless they are unavoidable.
 \item Use a zero before decimal points: ``0.25'', not ``.25''. Use ``cm\textsuperscript{3}'', not ``cc''.)
 \end{itemize}
 
-\subsection{Equations}
+\section{Simulation}
 Number equations consecutively. To make your 
 equations more compact, you may use the solidus (~/~), the exp function, or 
 appropriate exponents. Italicize Roman symbols for quantities and variables, 
@@ -81,7 +90,9 @@ symbols in your equation have been defined before or immediately following
 the equation. Use ``\eqref{eq}'', not ``Eq.~\eqref{eq}'' or ``equation \eqref{eq}'', except at 
 the beginning of a sentence: ``Equation \eqref{eq} is . . .''
 
-\subsection{\LaTeX-Specific Advice}
+\section{Result}
+
+\section{Conclusion}
 
 Please use ``soft'' (e.g., \verb|\eqref{Eq}|) cross references instead
 of ``hard'' references (e.g., \verb|(1)|). That will make it possible
