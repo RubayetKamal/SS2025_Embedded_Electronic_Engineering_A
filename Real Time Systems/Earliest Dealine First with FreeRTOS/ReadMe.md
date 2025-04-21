@@ -107,7 +107,6 @@ The script reads from `edf_log.txt` and visualizes the task schedule as a Gantt 
 
 ---
 
-## ✅ You're All Set!
+## ✅ That's All
 
-You’ve successfully built, run, and visualized an EDF scheduling simulation using FreeRTOS.  
-Feel free to explore different task configurations and deadlines to see how EDF behaves in various scenarios.
+The task configuations can be edited in the edf_posix.c to see how EDF behaves in various scenarios.
