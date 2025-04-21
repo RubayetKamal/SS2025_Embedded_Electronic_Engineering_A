@@ -30,7 +30,7 @@ typedef struct {
 
 SemaphoreHandle_t log_semaphore;
 task arrayOfTasksForUser[MAX_TASKS];
-int numberOfTasksForUser = 2;
+int numberOfTasksForUser = 4;
 
 void vApplicationMallocFailedHook(void) {}
 
@@ -112,17 +112,29 @@ void EDF_Task(void *params) {
 }
 
 int main() {
-    arrayOfTasksForUser[0].TaskAttributes[period] = 5;
+    arrayOfTasksForUser[0].TaskAttributes[period] = 6;
     arrayOfTasksForUser[0].TaskAttributes[wcet] = 2;
-    arrayOfTasksForUser[0].TaskAttributes[deadline] = 5;
+    arrayOfTasksForUser[0].TaskAttributes[deadline] = 6;
     arrayOfTasksForUser[0].TaskAttributes[arrival_time] = 0;
     arrayOfTasksForUser[0].instance = 0;
 
-    arrayOfTasksForUser[1].TaskAttributes[period] = 7;
-    arrayOfTasksForUser[1].TaskAttributes[wcet] = 4;
-    arrayOfTasksForUser[1].TaskAttributes[deadline] = 7;
+    arrayOfTasksForUser[1].TaskAttributes[period] = 3;
+    arrayOfTasksForUser[1].TaskAttributes[wcet] = 1;
+    arrayOfTasksForUser[1].TaskAttributes[deadline] = 3;
     arrayOfTasksForUser[1].TaskAttributes[arrival_time] = 0;
     arrayOfTasksForUser[1].instance = 0;
+
+    arrayOfTasksForUser[2].TaskAttributes[period] = 7;
+    arrayOfTasksForUser[2].TaskAttributes[wcet] = 1;
+    arrayOfTasksForUser[2].TaskAttributes[deadline] = 7;
+    arrayOfTasksForUser[2].TaskAttributes[arrival_time] = 0;
+    arrayOfTasksForUser[2].instance = 0;
+
+    arrayOfTasksForUser[3].TaskAttributes[period] = 9;
+    arrayOfTasksForUser[3].TaskAttributes[wcet] = 2;
+    arrayOfTasksForUser[3].TaskAttributes[deadline] = 9;
+    arrayOfTasksForUser[3].TaskAttributes[arrival_time] = 0;
+    arrayOfTasksForUser[3].instance = 0;
 
     for (int i = 0; i < numberOfTasksForUser; i++) {
         Copy_Execution_Time(arrayOfTasksForUser, i);
