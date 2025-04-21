@@ -20,7 +20,7 @@ Navigate to the Demo directory:
 cd ./FreeRTOS/FreeRTOS/Demo
 ```
 
-### 2. Add the EDF Project Folder
+### 2. Add the Traffic Light Simulation Project Folder
 
 Download this project folder (`Traffic Light Simulator with FreeRTOS`) and place it inside the `Demo` directory so that the structure looks like this:
 
@@ -33,11 +33,11 @@ FreeRTOS/
 
 ---
 
-## ⚙️ Build and Run the EDF Simulation
+## ⚙️ Build and Run the Traffic Light Simulation
 
 ### 3. Navigate to the Project Directory
 
-Change into the EDF project folder:
+Change into the Traffic Light Simulation project folder:
 
 ```bash
 cd "Traffic Light Simulator with FreeRTOS"
