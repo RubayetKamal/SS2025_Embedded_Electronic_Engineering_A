@@ -59,7 +59,7 @@ While low-power scheduling on heterogeneous cores is a known NP-complete problem
 
 The remainder of this paper is structured as follows: 
 Section~\ref{sec:fundamentals} presents the core concepts required for understanding real-time mixed critical systems along with multi-core architectures and multi-core scheduling strategies.
-Section~\ref{subsec: scheduling in multicore platforms} defines partition-based scheduling mechanisms, highlighting the differences between static and dynamic partitioning, and discussing the objectives and challenges associated with partitioning. The importance of task partitioning in mixed-criticality systems is also discussed. 
+Section~\ref{sec: partition-based scheduling} defines partition-based scheduling mechanisms, highlighting the differences between static and dynamic partitioning, and discussing the objectives and challenges associated with partitioning. The importance of task partitioning in mixed-criticality systems is also discussed. 
 Section~\ref{sec: clustering-based scheduling} outlines the clustering-based scheduling strategy and task allocation methodology, as originally proposed in~\cite{AbdallahGB24}. 
 Section~\ref{sec:implementation} describes the implementation of the algorithm using C code snippets, developed to simulate the strategy. It also presents the simulation results and discusses the key findings. 
 Finally, Section~\ref{sec: conclusion} concludes the paper and summarizes the main contributions.
@@ -117,10 +117,11 @@ A special class of aperiodic tasks is \textit{sporadic tasks}~\cite{butazo99}. S
 \subsection{Scheduling approach on multicore architecture}
 \label{subsec: scheduling approach on multicore architecture}
 
+\section{Partition-based Scheduling}
+\label{sec: partition-based scheduling}
 
-
-\subsection{Scheduling in multi-core platforms}
-\label{subsec: scheduling in multicore platforms}
+% \subsection{Scheduling in multi-core platforms}
+% \label{subsec: scheduling in multicore platforms}
 
 % In \cite{b17}, the authors propose tasks allocation heuristics based on the list by assigning each of them a priority. This list (there is only one list for all the tasks: global approach) determines the order of tasks allocation on different cores of processors. At each step of the heuristic, a task is selected from the list of candidate tasks to be scheduled on core, then the list is updated, this is repeated until the list is empty. This single scheduling strategy is applied to all cores. In other words if dependent tasks are placed on different cores then, the communication cost and the energy consumption are so high. So, the system performance decreases and we obtain a poor quality of service. The goal of this paper is to reduce this communication cost using an optimal allocation of task strategy.  In \cite{b1} which is based on works of \cite{b7}, an heuristic approach to frequently place each Cluster (contains communicating tasks) on the same core or on the nearest core to reduce the cost of communication and adding the verification constraints on core loads. The idea is that the code with the least load will be chosen. 
 
