@@ -1,20 +1,20 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
-\usepackage{cite}
+%\usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage[backend=bibtex]{biblatex}
+\addbibresource{references.bib}
+
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
 
-\title{Multi-core: Partition-based\\
-{\footnotesize \textsuperscript{*}Note: Sub-titles are not captured in Xplore and
-should not be used}
-\thanks{Identify applicable funding agency here. If none, delete this.}
+\title{Partition-based scheduling on multi-core systems\\
 }
 
 \author{\IEEEauthorblockN{1\textsuperscript{st} Rubayet Kamal}
@@ -27,7 +27,11 @@ rubayet.kamal@stud.hshl.de}
 \maketitle
 
 \begin{abstract}
-Systems with components of varying importance have high critical parts that need strong verification compared to low critical parts. Partitioning is the technique to separate different parts of a system both in time and space to prevent interference between those parts. Multicore system reduces the need for complex scheduling of tasks since each partition can run on a different core where the partitions are isolated but can still communicate between each other if needed. However, assigning tasks to different cores is NP hard, specially when we want to keep the core load balanced and the system predictable. This paper discusses the clustering-based task allocation strategy implemented in [1]. This strategy, which is implemented by scheduling with EDF, ensures that utlization factor is always less than 1 and ultimately reduces communication cost between cores.  
+Systems with components of varying criticality often require stronger verification for high-criticality parts compared to low-criticality ones. In multi-core systems, partitioning reduces the complexity of scheduling by assigning partitions to different cores, allowing isolated execution with optional inter-partition communication. However, partitioned scheduling faces resource utilization challenges similar to the bin-packing problem: tasks may fail to be assigned to any processor even when sufficient total capacity exists. This inefficiency is particularly severe when tasks have high individual utilization, potentially limiting system resource usage to as little as half. Moreover, assigning tasks while maintaining load balance and predictability is an NP-hard problem. This paper explores the fundamentals of partition-based scheduling and examines heuristic allocation and scheduling algorithms. Inspired by \cite{AbdallahGB24}, a clustering-based task allocation strategy is implemented in C to simulate and visualize the distribution of tasks across homogeneous cores.
+
+
+% The study focuses on the clustering-based task allocation strategy implemented in \cite{b1}, which uses the Earliest Deadline First (EDF) scheduling algorithm to ensure that the utilization factor remains less than 1 and communication cost between cores is minimized. A simulation written in C based on the strategy implemented in \cite{b1} is done to visualise the distribution of tasks among different homoegenous cores. 
+% Furthermore, work done in \cite{b2} has extended partitioned EDF scheduling by incorporating Quality of Service (QoS) constraints, allowing tasks to occasionally skip instances in order to handle overload and energy constraints more flexibly. This QoS-aware approach enhances the robustness of partitioned scheduling by improving schedulability in multicore systems while minimizing energy consumption.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -35,224 +39,193 @@ component, formatting, style, styling, insert
 \end{IEEEkeywords}
 
 \section{Introduction}
-This document is a model and instructions for \LaTeX.
-Please observe the conference page limits. 
+Real-time systems are often classified based on their timing requirements into soft, firm, and hard real-time systems \cite{6122386}.  Real-time computer system must react to stimuli from its environment within time intervals dictated by its environment. The instant when a result must be produced is called a deadline. If a result has utility even after the deadline has passed, the deadline is classified as soft, otherwise it is firm. If severe consequences could result if a firm deadline is missed, the deadline is called hard \cite{kopetzDist}. Firm real-time systems are often referred to as mixed-criticality systems due to the presence of some tasks being highly critical than others \cite{zamora2013}.
 
-\section{Related Work}
+The development of mixed-criticality real-time systems presents several challenges, particularly in task scheduling and resource allocation. While power management techniques such as Dynamic Voltage and Frequency Scaling (DVFS) and Dynamic Power Management (DPM) have been explored for energy optimization, these methods were initially designed for uniprocessor systems \cite{6122386}. With the increasing computational demands and advances in integrated circuit miniaturization, multi-core platforms is a valid solution for providing the necessary computational resources.
 
-\subsection{Maintaining the Integrity of the Specifications}
-
-The IEEEtran class file is used to format your paper and style the text. All margins, 
-column widths, line spaces, and text fonts are prescribed; please do not 
-alter them. You may note peculiarities. For example, the head margin
-measures proportionately more than is customary. This measurement 
-and others are deliberate, using specifications that anticipate your paper 
-as one part of the entire proceedings, and not as an independent document. 
-Please do not revise any of the current designations.
-
-\section{Proposed Strategy and Algorithm}
-Before you begin to format your paper, first write and save the content as a 
-separate text file. Complete all content and organizational editing before 
-formatting. Please note sections \ref{AA}--\ref{SCM} below for more information on 
-proofreading, spelling and grammar.
-
-Keep your text and graphic files separate until after the text has been 
-formatted and styled. Do not number text heads---{\LaTeX} will do that 
-for you.
-
-\subsection{Abbreviations and Acronyms}\label{AA}
-Define abbreviations and acronyms the first time they are used in the text, 
-even after they have been defined in the abstract. Abbreviations such as 
-IEEE, SI, MKS, CGS, ac, dc, and rms do not have to be defined. Do not use 
-abbreviations in the title or heads unless they are unavoidable.
-
-\subsection{Units}
+Scheduling tasks on multi-core systems introduces two key problems \cite{AbdallahGB24}:
 \begin{itemize}
-\item Use either SI (MKS) or CGS as primary units. (SI units are encouraged.) English units may be used as secondary units (in parentheses). An exception would be the use of English units as identifiers in trade, such as ``3.5-inch disk drive''.
-\item Avoid combining SI and CGS units, such as current in amperes and magnetic field in oersteds. This often leads to confusion because equations do not balance dimensionally. If you must use mixed units, clearly state the units for each quantity that you use in an equation.
-\item Do not mix complete spellings and abbreviations of units: ``Wb/m\textsuperscript{2}'' or ``webers per square meter'', not ``webers/m\textsuperscript{2}''. Spell out units when they appear in text: ``. . . a few henries'', not ``. . . a few H''.
-\item Use a zero before decimal points: ``0.25'', not ``.25''. Use ``cm\textsuperscript{3}'', not ``cc''.)
+    \item \textbf{Allocation problem (spatial organization)} : assigning each task to a core.
+    \item \textbf{Scheduling problem (temporal organization)} : determining the execution order of tasks on each core.
 \end{itemize}
 
-\section{Simulation}
-Number equations consecutively. To make your 
-equations more compact, you may use the solidus (~/~), the exp function, or 
-appropriate exponents. Italicize Roman symbols for quantities and variables, 
-but not Greek symbols. Use a long dash rather than a hyphen for a minus 
-sign. Punctuate equations with commas or periods when they are part of a 
-sentence, as in:
-\begin{equation}
-a+b=\gamma\label{eq}
-\end{equation}
+According to~\cite{7832222}, task scheduling heavily depends on efficient task allocation. A clustering-based scheduling algorithm addresses this by partitioning tasks that frequently communicate onto the same or nearby cores, minimizing communication overhead \cite{AbdallahGB24}. As per~\cite{zamora2013}, partitioning isolates different parts of the system to prevent mutual interference. However, partitioned scheduling faces resource utilization issues similar to the bin-packing problem: a task might not fit on any core despite sufficient total system capacity. This inefficiency becomes significant when individual task utilizations are high, and in the worst case, only half of the system’s resources may be utilized.
 
-Be sure that the 
-symbols in your equation have been defined before or immediately following 
-the equation. Use ``\eqref{eq}'', not ``Eq.~\eqref{eq}'' or ``equation \eqref{eq}'', except at 
-the beginning of a sentence: ``Equation \eqref{eq} is . . .''
+To address this, semi-partitioned scheduling (a hybrid approach) has been proposed. In this method, most tasks are statically assigned to fixed cores, while a small number of tasks are split into subtasks across different cores, enabling limited task migration \cite{AbdallahGB24}. Each core must still pass schedulability tests after assignment. Clustering concepts are used to group communicating tasks together, and in \cite{AbdallahGB24}, the author employed textit{Earliest Deadline First (EDF)} algorithm for local scheduling of each core.
 
-\section{Result}
+Although semi-partitioned scheduling shows theoretical performance improvements, its practical adoption remains limited due to concerns about context switch overhead and migration costs. As discussed in~\cite{5953668}, experiments suggest that for task sets with reasonable parameters, semi-partitioned scheduling can indeed outperform traditional partitioned approaches even under realistic overhead conditions.
 
-\section{Conclusion}
+While low-power scheduling on heterogeneous cores is a known NP-complete problem~\cite{7832222}, this paper focuses on homogeneous cores, where task allocation remains NP-hard. Inspired by~\cite{AbdallahGB24}, we implement a clustering-based task allocation strategy that aims to minimize communication costs, balance load across cores, and improve system feasibility for mixed-criticality real-time systems.
 
-Please use ``soft'' (e.g., \verb|\eqref{Eq}|) cross references instead
-of ``hard'' references (e.g., \verb|(1)|). That will make it possible
-to combine sections, add equations, or change the order of figures or
-citations without having to go through the file line by line.
+The remainder of this paper is structured as follows: 
+Section~\ref{sec:fundamentals} presents the core concepts required for understanding real-time mixed critical systems along with multi-core architectures and multi-core scheduling strategies.
+Section~\ref{subsec: scheduling in multicore platforms} defines partition-based scheduling mechanisms, highlighting the differences between static and dynamic partitioning, and discussing the objectives and challenges associated with partitioning. The importance of task partitioning in mixed-criticality systems is also discussed. 
+Section~\ref{sec: clustering-based scheduling} outlines the clustering-based scheduling strategy and task allocation methodology, as originally proposed in~\cite{AbdallahGB24}. 
+Section~\ref{sec:implementation} describes the implementation of the algorithm using C code snippets, developed to simulate the strategy. It also presents the simulation results and discusses the key findings. 
+Finally, Section~\ref{sec: conclusion} concludes the paper and summarizes the main contributions.
 
-Please don't use the \verb|{eqnarray}| equation environment. Use
-\verb|{align}| or \verb|{IEEEeqnarray}| instead. The \verb|{eqnarray}|
-environment leaves unsightly spaces around relation symbols.
 
-Please note that the \verb|{subequations}| environment in {\LaTeX}
-will increment the main equation counter even when there are no
-equation numbers displayed. If you forget that, you might write an
-article in which the equation numbers skip from (17) to (20), causing
-the copy editors to wonder if you've discovered a new method of
-counting.
 
-{\BibTeX} does not work by magic. It doesn't get the bibliographic
-data from thin air but from .bib files. If you use {\BibTeX} to produce a
-bibliography you must send the .bib files. 
 
-{\LaTeX} can't read your mind. If you assign the same label to a
-subsubsection and a table, you might find that Table I has been cross
-referenced as Table IV-B3. 
+\section{Background Material}
+\label{sec:fundamentals}
+Before exploring the strategy implemented in this paper, it is necessary to discuss the fundamental concepts to ensure that the terms used in later sections are familiar. This section is divided into three subsections: \ref{subsec:task and task types} introduces real-time systems and tasks; \ref{subsec: architecture of multi-core processors} covers multi-core processor architectures; and \ref{subsec: scheduling approach on multicore architecture} explains scheduling approaches on multi-core systems. The objective of this section is to clarify all necessary terminology before implementing and simulating the desired partition-based scheduling algorithm.
 
-{\LaTeX} does not have precognitive abilities. If you put a
-\verb|\label| command before the command that updates the counter it's
-supposed to be using, the label will pick up the last counter to be
-cross referenced instead. In particular, a \verb|\label| command
-should not go before the caption of a figure or a table.
+\subsection{Tasks and Task Types in Real-Time Systems}
+\label{subsec:task and task types}
+A real-time system evolves as a function of physical time~\cite{kopetzDist}. A set of related jobs that execute to support a system function is called a task~\cite{9999}. Therefore, a real-time task is primarily defined by its temporal properties.
 
-Do not use \verb|\nonumber| inside the \verb|{array}| environment. It
-will not stop equation numbers inside \verb|{array}| (there won't be
-any anyway) and it might stop a wanted equation number in the
-surrounding equation.
-
-\subsection{Some Common Mistakes}\label{SCM}
+According to~\cite{5465974}, a periodic task $\tau_i$ is characterized by two parameters:
 \begin{itemize}
-\item The word ``data'' is plural, not singular.
-\item The subscript for the permeability of vacuum $\mu_{0}$, and other common scientific constants, is zero with subscript formatting, not a lowercase letter ``o''.
-\item In American English, commas, semicolons, periods, question and exclamation marks are located within quotation marks only when a complete thought or name is cited, such as a title or full quotation. When quotation marks are used, instead of a bold or italic typeface, to highlight a word or phrase, punctuation should appear outside of the quotation marks. A parenthetical phrase or statement at the end of a sentence is punctuated outside of the closing parenthesis (like this). (A parenthetical sentence is punctuated within the parentheses.)
-\item A graph within a graph is an ``inset'', not an ``insert''. The word alternatively is preferred to the word ``alternately'' (unless you really mean something that alternates).
-\item Do not use the word ``essentially'' to mean ``approximately'' or ``effectively''.
-\item In your paper title, if the words ``that uses'' can accurately replace the word ``using'', capitalize the ``u''; if not, keep using lower-cased.
-\item Be aware of the different meanings of the homophones ``affect'' and ``effect'', ``complement'' and ``compliment'', ``discreet'' and ``discrete'', ``principal'' and ``principle''.
-\item Do not confuse ``imply'' and ``infer''.
-\item The prefix ``non'' is not a word; it should be joined to the word it modifies, usually without a hyphen.
-\item There is no period after the ``et'' in the Latin abbreviation ``et al.''.
-\item The abbreviation ``i.e.'' means ``that is'', and the abbreviation ``e.g.'' means ``for example''.
+    \item \textbf{Worst-Case Execution Time (WCET) $W_i$}: The maximum amount of time a task $\tau_i$ could take to execute.
+    \item \textbf{Period $T_i$}: The fixed time interval between successive arrivals of the task.
 \end{itemize}
-An excellent style manual for science writers is \cite{b7}.
+These properties are assumed to be constant for all task instances in a homogeneous multi-core architecture.
 
-\subsection{Authors and Affiliations}
-\textbf{The class file is designed for, but not limited to, six authors.} A 
-minimum of one author is required for all conference articles. Author names 
-should be listed starting from left to right and then moving down to the 
-next line. This is the author sequence that will be used in future citations 
-and by indexing services. Names should not be listed in columns nor group by 
-affiliation. Please keep your affiliations as succinct as possible (for 
-example, do not differentiate among departments of the same organization).
+Additional temporal characteristics of real-time tasks, as listed in~\cite{AbdallahGB24}, include:
+\begin{itemize}
+    \item \textbf{Release Time or Arrival Time ($R_i$)}: The time at which a task $\tau_i$ becomes eligible to start execution.
+    \item \textbf{Deadline ($D_i$)}: The latest time by which the task must complete its execution.
+    \item \textbf{Latency ($L_i$)}: The remaining time before a task either starts execution or its deadline occurs.
+    \item \textbf{Laxity or Slack Time ($X_i$)}: The maximum time a task can be delayed after activation and still meet its deadline.
+\end{itemize}
 
-\subsection{Identify the Headings}
-Headings, or heads, are organizational devices that guide the reader through 
-your paper. There are two types: component heads and text heads.
+Figure~\ref{fig:temporal_properties_of_task} illustrates the temporal properties of a real-time task.
 
-Component heads identify the different components of your paper and are not 
-topically subordinate to each other. Examples include Acknowledgments and 
-References and, for these, the correct style to use is ``Heading 5''. Use 
-``figure caption'' for your Figure captions, and ``table head'' for your 
-table title. Run-in heads, such as ``Abstract'', will require you to apply a 
-style (in this case, italic) in addition to the style provided by the drop 
-down menu to differentiate the head from the text.
-
-Text heads organize the topics on a relational, hierarchical basis. For 
-example, the paper title is the primary text head because all subsequent 
-material relates and elaborates on this one topic. If there are two or more 
-sub-topics, the next level head (uppercase Roman numerals) should be used 
-and, conversely, if there are not at least two sub-topics, then no subheads 
-should be introduced.
-
-\subsection{Figures and Tables}
-\paragraph{Positioning Figures and Tables} Place figures and tables at the top and 
-bottom of columns. Avoid placing them in the middle of columns. Large 
-figures and tables may span across both columns. Figure captions should be 
-below the figures; table heads should appear above the tables. Insert 
-figures and tables after they are cited in the text. Use the abbreviation 
-``Fig.~\ref{fig}'', even at the beginning of a sentence.
-
-\begin{table}[htbp]
-\caption{Table Type Styles}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Table}&\multicolumn{3}{|c|}{\textbf{Table Column Head}} \\
-\cline{2-4} 
-\textbf{Head} & \textbf{\textit{Table column subhead}}& \textbf{\textit{Subhead}}& \textbf{\textit{Subhead}} \\
-\hline
-copy& More table copy$^{\mathrm{a}}$& &  \\
-\hline
-\multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
-\end{tabular}
-\label{tab1}
-\end{center}
-\end{table}
-
-\begin{figure}[htbp]
-\centerline{\includegraphics{fig1.png}}
-\caption{Example of a figure caption.}
-\label{fig}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Temporal properties of task.png}
+    \caption{Temporal properties of a task}
+    \label{fig:temporal_properties_of_task}
 \end{figure}
 
-Figure Labels: Use 8 point Times New Roman for Figure labels. Use words 
-rather than symbols or abbreviations when writing Figure axis labels to 
-avoid confusing the reader. As an example, write the quantity 
-``Magnetization'', or ``Magnetization, M'', not just ``M''. If including 
-units in the label, present them within parentheses. Do not label axes only 
-with units. In the example, write ``Magnetization (A/m)'' or ``Magnetization 
-\{A[m(1)]\}'', not just ``A/m''. Do not label axes with a ratio of 
-quantities and units. For example, write ``Temperature (K)'', not 
-``Temperature/K''.
+Real-time tasks can be classified as either \textit{periodic} or \textit{aperiodic}:
+\begin{itemize}
+    \item \textbf{Periodic Tasks}: These tasks consist of an infinite sequence of identical activities, called instances or jobs, that are activated regularly at a constant rate~\cite{butazo99}. Periodic tasks are characterized by strict deadlines and form the majority of tasks in a real-time application. According to~\cite{french18}, a periodic task $\tau_i$ is typically modeled by four parameters: $(R_i, W_i, D_i, P_i)$~\cite{AbdallahGB24}.
+    
+    \item \textbf{Aperiodic Tasks}: These tasks also consist of a sequence of identical jobs, but their activations are unpredictable and not evenly spaced. Aperiodic tasks are generally modeled by a single parameter, $W_i$, representing their worst-case execution time~\cite{AbdallahGB24}.
+\end{itemize}
+
+A special class of aperiodic tasks is \textit{sporadic tasks}~\cite{butazo99}. Sporadic tasks, while aperiodic in execution time, have their execution rate constrained by a minimum inter-arrival time. They are modeled by the parameters $(W_i, D_i, T_{\text{min}})$, where $T_{\text{min}}$ is the minimum time interval between two consecutive activations, and $D_i$ is the critical delay~\cite{AbdallahGB24}.
+
+
+
+
+\subsection{Architecure of multi-core processors}
+\label{subsec: architecture of multi-core processors}
+
+\subsection{Scheduling approach on multicore architecture}
+\label{subsec: scheduling approach on multicore architecture}
+
+
+
+\subsection{Scheduling in multi-core platforms}
+\label{subsec: scheduling in multicore platforms}
+
+% In \cite{b17}, the authors propose tasks allocation heuristics based on the list by assigning each of them a priority. This list (there is only one list for all the tasks: global approach) determines the order of tasks allocation on different cores of processors. At each step of the heuristic, a task is selected from the list of candidate tasks to be scheduled on core, then the list is updated, this is repeated until the list is empty. This single scheduling strategy is applied to all cores. In other words if dependent tasks are placed on different cores then, the communication cost and the energy consumption are so high. So, the system performance decreases and we obtain a poor quality of service. The goal of this paper is to reduce this communication cost using an optimal allocation of task strategy.  In \cite{b1} which is based on works of \cite{b7}, an heuristic approach to frequently place each Cluster (contains communicating tasks) on the same core or on the nearest core to reduce the cost of communication and adding the verification constraints on core loads. The idea is that the code with the least load will be chosen. 
+
+
+
+
+% There are two basic approaches for scheduling real-time tasks on multi-core platforms:
+% \begin{itemize}
+%     \item Global Approach: Each task can execute on any available processor at run time. The objective is to allocate at each instant tasks to cores P. For this, there is a single queue for all tasks and single scheduling strategy is used which applies the set of cores (see Figure 2). In this case, an essen- tial property is that tasks migration is allowed.
+
+%     \item Partitioned Approach: Each task is assigned to a processor beforehand and during run time it can only execute on this particular processor. The objective is to definitively assign each task to one core or to define subset of tasks each assigned to core.It is thus possible to apply single-core strategies on each of the architecture’s processors, in which each processor has their own execution queue (see Figure 3).
+%     \item Hybrid approach: The hybrid or semi-partitioned approach is derived from the partitioned approach. In this approach, certain occurrences of tasks can be executed on different cores (migration). Each core receives certain tasks after the partitioning heuristic and can perform an exchange of tasks with other cores, this is called task migration. It should be noted that for all these approaches, there is a necessary condition of schedulability, (see equation (3)). 
+% \end{itemize}
+
+% Recent studies showed that the partitioned approach is superior in scheduling hard real-time systems, for both theoretical and practical reasons. However, partitioned scheduling still suffers from resource waste similar to the bin-packing problem: a task would fail to be partitioned to any of the processors when the total available capacity of the whole system is still large. When the individual task utilization is high, this waste could be significant, and in the worst-case only half of the system resource can be used. 
+
+% \subsection{Scheduling}
+% \label{subsec: scheduling}
+% Partitioning a task set is equivalent to the Bin-Packing problem: how to place n objects of different sizes in m identical boxes. This problem is known to be NP-hard. Heuristic-based scheduling algoritms are the most common approaches for task scheduling. These are usually classified into three classes:
+
+% \begin{itemize}
+%     \item Priority-based scheduling: priorities are calculated and assigned to the tasks which are then scheduled on the processors according to their priorities.
+%     \item Duplication-based scheduling: while tasks are allocated to a processor, its parent (and predecessor) tasks are duplicated to occupy the idle times of the processor to eliminate the communication delay that occurs when message is passed from the parent tasks to the allotted task.
+%     \item In cluster-based scheduling, some tasks, that need to communicate among themselves, are grouped together to form a cluster. Clusters are then scheduled on to an available processor. The main problem arises when the number of clusters is greater than the number of processors. This leads to programming the communicating clusters on the same processor and which remains in the nearest processor.
+% \end{itemize}
+
+% \section{Partition-based scheduling mechanism}
+% \label{sec: partition-based scheduling mechanism}
+
+% Static algorithms are those in which scheduling decisions are based on fixed
+% parameters, assigned to tasks before their activation.
+
+% Dynamic algorithms are those in which scheduling decisions are based on
+% dynamic parameters that may change during system evolution.
+
+% An algorithm is said to be heuristic if it is guided by a heuristic function
+% in taking its scheduling decisions. A heuristic algorithm tends toward the
+% optimal schedule, but does not guarantee finding it
+
+
+\section{Clustering-based scheduling strategy}
+\label{sec: clustering-based scheduling}
+
+\section{Implementation in C}
+\label{sec:implementation}
+
+\section{Simulation and Outcome}
+\label{sec: simulation and outcome}
+
+
+
+\section{Conclusion}
+\label{sec: conclusion}
+
 
 \section*{Acknowledgment}
 
-The preferred spelling of the word ``acknowledgment'' in America is without 
-an ``e'' after the ``g''. Avoid the stilted expression ``one of us (R. B. 
-G.) thanks $\ldots$''. Instead, try ``R. B. G. thanks$\ldots$''. Put sponsor 
-acknowledgments in the unnumbered footnote on the first page.
 
-\section*{References}
+% \begin{thebibliography}{00}
+% \bibitem{b1} H. Ben Abdallah, H. Gharsellaoui, and S. Bouamama, "A Novel Partitioning Approach for Real-Time
+% Scheduling of Mixed-Criticality Systems," in Proceedings of the 16th International Conference on
+% Agents and Artificial Intelligence, Rome, Italy, 2024, pp. 882–889.
+% \bibitem{b2} N. Abdallah, A. Queudet, M. Chetto and R. H. Chehade, "Partitioned EDF scheduling in multicore systems with quality of service constraints," 2011 18th IEEE International Conference on Electronics, Circuits, and Systems, Beirut, Lebanon, 2011, pp. 764-767, doi: 10.1109/ICECS.2011.6122386. keywords: {Real time systems;Quality of service;Sorting;Processor scheduling;Partitioning algorithms;Optimal scheduling;Energy consumption}.
+% \bibitem{b3} J. Zamorano, J. Puente, "On real-time partitioned multicore systems," Universidad Polite´cnica de Madrid (UPM), Spain, 2013 
+% \bibitem{b4} N. Guan, M. Stigge, W. Yi and G. Yu, "Fixed-Priority Multiprocessor Scheduling with Liu and Layland's Utilization Bound," 2010 16th IEEE Real-Time and Embedded Technology and Applications Symposium, Stockholm, Sweden, 2010, pp. 165-174, doi: 10.1109/RTAS.2010.39. keywords: {Processor scheduling;Scheduling algorithm;Real time systems;Multiprocessing systems;Application software;Information technology;Computer science;Partitioning algorithms;Testing;H infinity control;real-time systems;utilization bound;multiprocessor;fixed priority scheduling}
+% \bibitem{b5} Y. Zhang, N. Guan, Y. Xiao and W. Yi, "Implementation and empirical comparison of partitioning-based multi-core scheduling," 2011 6th IEEE International Symposium on Industrial and Embedded Systems, Vasteras, Sweden, 2011, pp. 248-255, doi: 10.1109/SIES.2011.5953668. keywords: {Real time systems;Scheduling;Processor scheduling;Sleep;Linux;Context;Data structures} 
+% \bibitem{b56} 2013 IEEE 21st International Symposium on Modelling, Analysis and Simulation of Computer and
+% Telecommunication Systems: IEEE, 2013.
+% \bibitem{b7} P. Bhardwaj and V. Kumar, "An Effective Load Balancing Task Allocation Algorithm using Task
+% Clustering," IJCA, vol. 77, no. 7, pp. 32–39, 2013, doi: 10.5120/13410-1064.
+% \bibitem{b8} G. C. Buttazzo, Hard Real-Time Computing Systems. Boston, MA: Springer US, 2011.
+% A. Crespo, M. Masmano, J. Coronel, S. Peiró, P. Balbastre, and J. Simó, "Multicore partitioned
+% systems based on hypervisor," IFAC Proceedings Volumes, vol. 47, no. 3, pp. 12293–12298, 2014,
+% doi: 10.3182/20140824-6-ZA-1003.02410.
+% \bibitem{b9}Z. Dong, J. Wang, G. F. Riley, and S. Yalamanchili, "A Study of the Effect of Partitioning on Parallel
+% Simulation of Multicore Systems," in 2013 IEEE 21st International Symposium on Modelling, Analysis
+% and Simulation of Computer and Telecommunication Systems, San Francisco, CA, USA, 2013, pp.
+% \bibitem{b10} 2021 IEEE 27th Real-Time and Embedded Technology and Applications Symposium (RTAS): IEEE,
+% 2021.
+% \bibitem{b11}H. Kopetz, Real-Time Systems. Boston, MA: Springer US, 2011.
 
-Please number citations consecutively within brackets \cite{b1}. The 
-sentence punctuation follows the bracket \cite{b2}. Refer simply to the reference 
-number, as in \cite{b3}---do not use ``Ref. \cite{b3}'' or ``reference \cite{b3}'' except at 
-the beginning of a sentence: ``Reference \cite{b3} was the first $\ldots$''
+% \bibitem{b12}Proceedings of the 16th International Conference on Agents and Artificial Intelligence: SCITEPRESS -
+% Science and Technology Publications, 2024.
+% [15] N. Saranya and R. C. Hansdah, "Dynamic Partitioning Based Scheduling of Real-Time Tasks in
+% Multicore Processors," in 2015 IEEE 18th International Symposium on Real-Time Distributed
+% Computing, Auckland, New Zealand, 2015, pp. 190–197.
+% \bibitem{b13}V. Sarkar, "Partitioning and scheduling parallel programs for multiprocessors,"
+% \bibitem{b14}"Scheduling Algorithms for Multiprogramming in a Hard- Real-Time Environment,"
+% \bibitem{b15}J. Wang, T. Zhang, D. Shen, X. S. Hu, and S. Han, "APaS: An Adaptive Partition-Based Scheduling
+% Framework for 6TiSCH Networks," in 2021 IEEE 27th Real-Time and Embedded Technology and
+% Applications Symposium (RTAS), Nashville, TN, USA, 2021, pp. 320–332.
+% \bibitem{b16} K. M. K. Abdelsalam, S. M. Khamis, H. M. Bahig, and H. M. Bahig, "A multicore-based algorithm for
+% optimal multi-way number partitioning," Int. j. inf. tecnol., vol. 15, no. 6, pp. 2929–2940, 2023, doi:
+% 10.1007/s41870-023-01328-1.
+% \bibitem{b17} K. Zhu and Y. Ding, "Research on Low Power Scheduling of Heterogeneous Multi Core Mission Based on Genetic Algorithm," 2017 9th International Conference on Measuring Technology and Mechatronics Automation (ICMTMA), Changsha, China, 2017, pp. 219-223, doi: 10.1109/ICMTMA.2017.0059. keywords: {Multicore processing;Scheduling;Power demand;Algorithm design and analysis;Partitioning algorithms;Scheduling algorithms;Genetic algorithm;heterogeneous multi-core;key task;low power scheduling;algorithm research},
+% \bibitem{b18} Zhang, H. (2012). ordonnancement de tâches temps réel dans les systèmes multicoeur. PhD thesis, Université de Nantes.
+% \bibitem{b19} Huang, J. and Raabe, A. (2011). Energy-aware task allocation for network-on-chip based heterogeneous multiprocessor systems. In Parallel, Distributed and Network-Based Processing (PDP), 2011 19th Euromicro International Conference on, page 447–454. IEEE.
 
-Number footnotes separately in superscripts. Place the actual footnote at 
-the bottom of the column in which it was cited. Do not put footnotes in the 
-abstract or reference list. Use letters for table footnotes.
 
-Unless there are six authors or more give all authors' names; do not use 
-``et al.''. Papers that have not been published, even if they have been 
-submitted for publication, should be cited as ``unpublished'' \cite{b4}. Papers 
-that have been accepted for publication should be cited as ``in press'' \cite{b5}. 
-Capitalize only the first word in a paper title, except for proper nouns and 
-element symbols.
 
-For papers published in translation journals, please give the English 
-citation first, followed by the original foreign-language citation \cite{b6}.
 
-\begin{thebibliography}{00}
-\bibitem{b1} G. Eason, B. Noble, and I. N. Sneddon, ``On certain integrals of Lipschitz-Hankel type involving products of Bessel functions,'' Phil. Trans. Roy. Soc. London, vol. A247, pp. 529--551, April 1955.
-\bibitem{b2} J. Clerk Maxwell, A Treatise on Electricity and Magnetism, 3rd ed., vol. 2. Oxford: Clarendon, 1892, pp.68--73.
-\bibitem{b3} I. S. Jacobs and C. P. Bean, ``Fine particles, thin films and exchange anisotropy,'' in Magnetism, vol. III, G. T. Rado and H. Suhl, Eds. New York: Academic, 1963, pp. 271--350.
-\bibitem{b4} K. Elissa, ``Title of paper if known,'' unpublished.
-\bibitem{b5} R. Nicole, ``Title of paper with only first word capitalized,'' J. Name Stand. Abbrev., in press.
-\bibitem{b6} Y. Yorozu, M. Hirano, K. Oka, and Y. Tagawa, ``Electron spectroscopy studies on magneto-optical media and plastic substrate interface,'' IEEE Transl. J. Magn. Japan, vol. 2, pp. 740--741, August 1987 [Digests 9th Annual Conf. Magnetics Japan, p. 301, 1982].
-\bibitem{b7} M. Young, The Technical Writer's Handbook. Mill Valley, CA: University Science, 1989.
-\end{thebibliography}
-\vspace{12pt}
-\color{red}
-IEEE conference templates contain guidance text for composing and formatting conference papers. Please ensure that all template text is removed from your conference paper prior to submission to the conference. Failure to remove the template text from your paper may result in your paper not being published.
+% \end{thebibliography}
+% \vspace{12pt}
+% \color{red}
+% IEEE conference templates contain guidance text for composing and formatting conference papers. Please ensure that all template text is removed from your conference paper prior to submission to the conference. Failure to remove the template text from your paper may result in your paper not being published.
+\printbibliography
 
 \end{document}
