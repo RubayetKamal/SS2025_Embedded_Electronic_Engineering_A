@@ -4,7 +4,9 @@ on:
   push:
     paths:
       - 'Hardware Software Co Design/**/*.tex'
+      - 'Hardware Software Co Design/**/*.bib'
       - 'Real Time Systems/**/*.tex'
+      - 'Real Time Systems/**/*.bib'
 
 jobs:
   compile-latex:
@@ -29,37 +31,30 @@ jobs:
             texlive-fonts-recommended \
             texlive-publishers \
             texlive-science \
-            texlive-extra-utils \
             texlive-bibtex-extra \
-            latexmk \
-            ghostscript
+            biber \
+            latexmk
 
-      - name: Compile LaTeX files in "Hardware Software Co Design"
+      - name: Compile LaTeX files in "Real Time Systems"
         run: |
-          mkdir -p "Hardware Software Co Design/Compiled PDF"
-          cd "Hardware Software Co Design"
+          mkdir -p "Real Time Systems/Seminar Paper PDF"
+          cd "Real Time Systems"
           shopt -s nullglob
           for tex_file in *.tex; do
-            # Always attempt compilation and PDF move
-            latexmk -pdf -f -interaction=nonstopmode "$tex_file" || true
-            if [ -f "${tex_file%.tex}.pdf" ]; then
-              mv -v "${tex_file%.tex}.pdf" "Compiled PDF/" || true
-            fi
+            latexmk -pdf -bibtex -interaction=nonstopmode "$tex_file"
+            mv "${tex_file%.tex}.pdf" "Seminar Paper PDF/"
             latexmk -c
           done
           shopt -u nullglob
 
-      - name: Compile LaTeX files in "Real Time Systems"
+      - name: Compile LaTeX files in "Hardware Software Co Design"
         run: |
-          mkdir -p "Real Time Systems/Compiled PDF"
-          cd "Real Time Systems"
+          mkdir -p "Hardware Software Co Design/Seminar Paper PDF"
+          cd "Hardware Software Co Design"
           shopt -s nullglob
           for tex_file in *.tex; do
-            # Always attempt compilation and PDF move
-            latexmk -pdf -f -interaction=nonstopmode "$tex_file" || true
-            if [ -f "${tex_file%.tex}.pdf" ]; then
-              mv -v "${tex_file%.tex}.pdf" "Compiled PDF/" || true
-            fi
+            latexmk -pdf -bibtex -interaction=nonstopmode "$tex_file"
+            mv "${tex_file%.tex}.pdf" "Seminar Paper PDF/"
             latexmk -c
           done
           shopt -u nullglob
