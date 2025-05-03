@@ -7,8 +7,47 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
 \usepackage[backend=bibtex]{biblatex}
 \addbibresource{references.bib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[hidelinks]{hyperref}
+
+
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily,
+  breaklines=true,
+  frame=single,
+}
+
+
+\lstset{
+  language=C,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{green!60!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  backgroundcolor=\color{gray!10},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  frame=single,
+  tabsize=2,
+  captionpos=b,
+  breaklines=true,
+  breakatwhitespace=false,
+  escapeinside={(*@}{@*)}
+}
+
+
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -27,7 +66,7 @@ rubayet.kamal@stud.hshl.de}
 \maketitle
 
 \begin{abstract}
-Systems with components of varying criticality often require stronger verification for high-criticality parts compared to low-criticality ones. In multi-core systems, partitioning reduces the complexity of scheduling by assigning partitions to different cores, allowing isolated execution with optional inter-partition communication. However, partitioned scheduling faces resource utilization challenges similar to the bin-packing problem: tasks may fail to be assigned to any processor even when sufficient total capacity exists. This inefficiency is particularly severe when tasks have high individual utilization, potentially limiting system resource usage to as little as half. Moreover, assigning tasks while maintaining load balance and predictability is an NP-hard problem. This paper explores the fundamentals of partition-based scheduling and examines heuristic allocation and scheduling algorithms. Inspired by \cite{AbdallahGB24}, a clustering-based task allocation strategy is implemented in C to simulate and visualize the distribution of tasks across homogeneous cores.
+Systems with components of varying criticality often require stronger verification for high-criticality parts compared to low-criticality ones. In multi-core systems, partitioning reduces the complexity of scheduling by assigning partitions to different cores, allowing isolated execution with optional inter-partition communication. However, partitioned scheduling faces resource utilization challenges similar to the bin-packing problem: tasks may fail to be assigned to any processor even when sufficient total capacity exists. This inefficiency is particularly severe when tasks have high individual utilization, potentially limiting system resource usage to as little as half. Moreover, assigning tasks while maintaining load balance and predictability is an NP-hard problem. This paper explores the fundamentals of partition-based scheduling and examines heuristic allocation and scheduling algorithms. In \cite{AbdallahGB24}, the authors have used a clustering-based task allocation strategy with Earlest Deadline First (EDF) scheduling algorithm in each core. This strategy or technique is simulated using C and allocation of tasks are visualised using Python script.
 
 
 % The study focuses on the clustering-based task allocation strategy implemented in \cite{b1}, which uses the Earliest Deadline First (EDF) scheduling algorithm to ensure that the utilization factor remains less than 1 and communication cost between cores is minimized. A simulation written in C based on the strategy implemented in \cite{b1} is done to visualise the distribution of tasks among different homoegenous cores. 
@@ -35,7 +74,7 @@ Systems with components of varying criticality often require stronger verificati
 \end{abstract}
 
 \begin{IEEEkeywords}
-component, formatting, style, styling, insert
+multi-core, partition, EDF, styling, insert
 \end{IEEEkeywords}
 
 \section{Introduction}
@@ -51,18 +90,30 @@ Scheduling tasks on multi-core systems introduces two key problems \cite{Abdalla
 
 According to~\cite{7832222}, task scheduling heavily depends on efficient task allocation. A clustering-based scheduling algorithm addresses this by partitioning tasks that frequently communicate onto the same or nearby cores, minimizing communication overhead \cite{AbdallahGB24}. As per~\cite{zamora2013}, partitioning isolates different parts of the system to prevent mutual interference. However, partitioned scheduling faces resource utilization issues similar to the bin-packing problem: a task might not fit on any core despite sufficient total system capacity. This inefficiency becomes significant when individual task utilizations are high, and in the worst case, only half of the system’s resources may be utilized.
 
-To address this, semi-partitioned scheduling (a hybrid approach) has been proposed. In this method, most tasks are statically assigned to fixed cores, while a small number of tasks are split into subtasks across different cores, enabling limited task migration \cite{AbdallahGB24}. Each core must still pass schedulability tests after assignment. Clustering concepts are used to group communicating tasks together, and in \cite{AbdallahGB24}, the author employed textit{Earliest Deadline First (EDF)} algorithm for local scheduling of each core.
+To address this, semi-partitioned scheduling (a hybrid approach) has been proposed. In this method, most tasks are statically assigned to fixed cores, while a small number of tasks are split into subtasks across different cores, enabling limited task migration \cite{AbdallahGB24}. Each core must still pass schedulability tests after assignment. Clustering concepts are used to group communicating tasks together, and in \cite{AbdallahGB24}, the author employed Earliest Deadline First (EDF) algorithm for local scheduling of each core.
+
+EDF is
+a scheduling algorithm in which jobs with earliest deadlines have higher
+priority. EDF is an optimal scheduling algorithm on preemp-
+tive uniprocessors, in the following sense: if a collection of
+independent jobs can be scheduled (by any algorithm) such
+that all the jobs complete by their deadlines, EDF will schedule
+this collection of jobs such that they all complete by their
+deadlines \cite{6122386}.
 
 Although semi-partitioned scheduling shows theoretical performance improvements, its practical adoption remains limited due to concerns about context switch overhead and migration costs. As discussed in~\cite{5953668}, experiments suggest that for task sets with reasonable parameters, semi-partitioned scheduling can indeed outperform traditional partitioned approaches even under realistic overhead conditions.
 
-While low-power scheduling on heterogeneous cores is a known NP-complete problem~\cite{7832222}, this paper focuses on homogeneous cores, where task allocation remains NP-hard. Inspired by~\cite{AbdallahGB24}, we implement a clustering-based task allocation strategy that aims to minimize communication costs, balance load across cores, and improve system feasibility for mixed-criticality real-time systems.
+% While low-power scheduling on heterogeneous cores is a known NP-complete problem~\cite{7832222}, this paper focuses on homogeneous cores, where task allocation remains NP-hard. 
+
+A clustering-based task allocation strategy that aims to minimize communication costs, balance load across cores, and improve system feasibility for mixed-criticality real-time systems is implemented in this paper, inspired from \cite{AbdallahGB24}. Each cores run on Earliest deadline first scheduling algorithm. However, \cite{5194980} has suggested that EDF can lead to many tasks missing their deadlines on multi-core processors in
+overload condition for multi-core systems. The purpose of this paper is to evaluate the communication cost between core and ease of allocation of tasks using the clustering-based strategy. 
 
 The remainder of this paper is structured as follows: 
 Section~\ref{sec:fundamentals} presents the core concepts required for understanding real-time mixed critical systems along with multi-core architectures and multi-core scheduling strategies.
 Section~\ref{sec: partition-based scheduling} defines partition-based scheduling mechanisms, highlighting the differences between static and dynamic partitioning, and discussing the objectives and challenges associated with partitioning. The importance of task partitioning in mixed-criticality systems is also discussed. 
-Section~\ref{sec: clustering-based scheduling} outlines the clustering-based scheduling strategy and task allocation methodology, as originally proposed in~\cite{AbdallahGB24}. 
-Section~\ref{sec:implementation} describes the implementation of the algorithm using C code snippets, developed to simulate the strategy. It also presents the simulation results and discusses the key findings. 
-Finally, Section~\ref{sec: conclusion} concludes the paper and summarizes the main contributions.
+Section~\ref{sec: clustering-based scheduling} outlines the clustering-based scheduling strategy and task allocation methodology, as originally proposed in~\cite{AbdallahGB24}.
+Section~\ref{sec:implementation} describes the implementation of the named algorithm using C code snippets. Thereafter, section \ref{sec: simulation and outcome} shows the outcome from simulation and discusses the key findings. 
+Finally, Section~\ref{subsec: conclusion} concludes the paper and summarizes the main contributions.
 
 
 
@@ -111,122 +162,337 @@ A special class of aperiodic tasks is \textit{sporadic tasks}~\cite{butazo99}. S
 
 
 
-\subsection{Architecure of multi-core processors}
+\subsection{Architecture of Multi-Core Processors}
 \label{subsec: architecture of multi-core processors}
 
-\subsection{Scheduling approach on multicore architecture}
+The performance of single-threaded processors has become increasingly limited by power constraints, prompting processor architects to adopt multi-core designs as a means to enhance performance. As Intel analyst Nathan stated, "multi-core processors are the inevitable product of Moore's Law." The growing demands of modern applications and the continued advancement of CPU manufacturing technologies—enabling the integration of a large number of transistors on a single chip—have driven the rapid development of multi-core processors~\cite{6234619}.
+
+Although multi-core technology is a hardware innovation, it requires corresponding software support to fully realize its potential. In essence, a multi-core processor integrates multiple processing cores on a single chip, allowing the system to leverage the abundance of transistor resources. This enables the exploitation of various levels of parallelism—such as instruction-level and thread-level parallelism—through concurrent core execution, thereby enhancing overall performance~\cite{6234619}.
+
+Increasing the number of cores in a processor not only improves parallel task execution but also enhances energy efficiency. Multi-core systems can deliver higher performance by using several low-frequency cores instead of a single high-frequency core, offering both flexibility and power savings.
+
+Compared to single-core processors, multi-core processors offer several key advantages:
+\begin{itemize}
+    \item Improved parallel performance~\cite{h2000},
+    \item Lower communication latency~\cite{lx2015},
+    \item Higher bandwidth~\cite{997877},
+    \item Reduced power consumption.
+\end{itemize}
+
+Multi-core processors can be categorized as either \textit{homogeneous} or \textit{heterogeneous}, depending on how the cores are integrated:
+\begin{itemize}
+    \item \textbf{Homogeneous Multi-Core Processors}: These integrate multiple identical cores on a single chip. Each core typically performs similar tasks, enabling symmetric and balanced parallel computing.
+    \item \textbf{Heterogeneous Multi-Core Processors}: These integrate a mix of cores with varying complexity. Typically, a complex superscalar core (main core) handles general-purpose computation, such as operating system tasks and scheduling, while simpler subordinate cores are optimized for specific tasks. These lightweight cores are often managed by the main core and accelerate computations for specialized applications~\cite{6234619}.
+\end{itemize}
+
+
+
+\subsection{The scheduling concept}
 \label{subsec: scheduling approach on multicore architecture}
+When a single processor has to execute a set of concurrent tasks – that is, tasks that can overlap in time – the CPU has to be assigned to the various tasks according to a predefined criterion, called a scheduling policy. The set of rules that, at any time, determines the order in which tasks are executed is called a scheduling algorithm \cite{butazo99}.
+
+In many operating systems that allow dynamic task activation, the running task can be interrupted at any point, so that a more important task that arrives in the system can immediately gain the processor and does not need to wait in the ready queue. In this case, the running task is interrupted and inserted in the ready queue, while the CPU is assigned to the most important ready task that just arrived. The operation of suspending the running task and inserting it into the ready queue is called preemption as shown in fig. \ref{fig:preemption}  \cite{butazo99}. Preemptive scheduling typically allows higher efficiency, in the sense that it al-
+lows executing a real-time task sets with higher processor utilization \cite{butazo99}.
+
+"Among the great variety of algorithms proposed for scheduling real-time tasks, the following main classes can be identified:
+\begin{itemize}
+    \item Preemptive: In preemptive algorithms, the running task can be interrupted at any time to assign the processor to another active task, according to a predefined scheduling policy.
+    \item Non-preemtptive: In non-preemptive algorithms, a task, once started, is executed by the pro- cessor until completion. In this case, all scheduling decisions are taken as the task terminates its execution.
+    \item Static: Static algorithms are those in which scheduling decisions are based on fixed parameters, assigned to tasks before their activation.
+    \item Dynamic: Dynamic algorithms are those in which scheduling decisions are based on dynamic parameters that may change during system evolution.
+    \item Off-line: A scheduling algorithm is used off line if it is executed on the entire task set before tasks activation. The schedule generated in this way is stored in a table and later executed by a dispatcher.
+    \item Online: A scheduling algorithm is used online if scheduling decisions are taken at runtime every time a new task enters the system or when a running task terminates.
+    \item Optimal: An algorithm is said to be optimal if it minimizes some given cost function defined over the task set. When no cost function is defined and the only concern is to achieve a feasible schedule, then an algorithm is said to be optimal if it is able to find a feasible schedule, if one exists.
+    \item Heuristic: An algorithm is said to be heuristic if it is guided by a heuristic function in taking its scheduling decisions. A heuristic algorithm tends toward the optimal schedule, but does not guarantee finding it" \cite{butazo99}.
+\end{itemize}
+
+Multi-core scheduling is a 2 dimensional problem. First, allocation problem (spatial organization) deter- mines for each tasks which core should run on. Second, scheduling problem (temporal organization) de- fines date and order execution of tasks \cite{AbdallahGB24}.
+
+% The complexity of scheduling algorithms is of high relevance in dynamic real- time systems, where scheduling decisions must be taken on line during task execution. A polynomial algorithm is one whose time complexity grows as a polynomial function p of the input length n of an instance. The complexity of such algorithms is denoted by O(p(n)). Each algorithm whose complexity function cannot be bounded in that way is called an exponential time algorithm. In particular, NP is the class of all decision problems that can be solved in polynomial time by a nondeterministic Turing machine. According to \cite{butazo99}: "A problem Q is said to be NP-complete if Q ∈ NP and, for every Q′ ∈ NP, Q’ is polynomially transformable to Q. A decision problem Q is said to be NP-hard if all problems in NP are polynomially transformable to Q, but we cannot show that Q ∈ NP."
+
+The complexity of scheduling algorithms is of high relevance in dynamic real-time systems, where scheduling decisions must be taken online during task execution. A polynomial algorithm is one whose time complexity grows as a polynomial function $p$ of the input length $n$ of an instance. The complexity of such algorithms is denoted by $\mathcal{O}(p(n))$. Each algorithm whose complexity function cannot be bounded in that way is called an exponential time algorithm.
+
+In particular, $\mathsf{NP}$ is the class of all decision problems that can be solved in polynomial time by a nondeterministic Turing machine. According to \cite{butazo99}:
+
+\begin{quote}
+"A problem $Q$ is said to be $\mathsf{NP}$-complete if $Q \in \mathsf{NP}$ and, for every $Q' \in \mathsf{NP}$, $Q'$ is polynomially transformable to $Q$. A decision problem $Q$ is said to be $\mathsf{NP}$-hard if all problems in $\mathsf{NP}$ are polynomially transformable to $Q$, but we cannot show that $Q \in \mathsf{NP}$."
+\end{quote}
+
+
+An algorithm is said to be heuristic if it is guided by a heuristic function in taking its scheduling decisions. A heuristic algorithm tends toward the optimal schedule, but does not guarantee finding it. For task scheduling, heuristic-based scheduling algorithms are common. These are usually classified into three classes:
+
+\begin{itemize}
+    \item "Priority-based scheduling: priorities are calculated and assigned to the tasks which are then scheduled on the processors according to their priorities.
+    \item Duplication-based scheduling: while tasks are allocated to a processor, its parent (and predecessor) tasks are duplicated to occupy the idle times of the processor to eliminate the communication delay that occurs when message is passed from the parent tasks to the allotted task.
+    \item In cluster-based scheduling, some tasks, that need to communicate among themselves, are grouped together to form a cluster. Clusters are then scheduled on to an available processor. The main problem arises when the number of clusters is greater than the number of processors. This leads to programming the communicating clusters on the same processor and which remains in the nearest processor" \cite{AbdallahGB24}.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1.2\linewidth]{preemption.png}
+    \caption{preemption}
+    \label{fig:preemption}
+\end{figure}
+
 
 \section{Partition-based Scheduling}
 \label{sec: partition-based scheduling}
 
-% \subsection{Scheduling in multi-core platforms}
-% \label{subsec: scheduling in multicore platforms}
+Various algorithms for scheduling recurrent real-time task systems on multiprocessor platforms impose different constraints on where a task's jobs may execute. Two fundamental approaches widely studied for scheduling on multi-core processors are \textit{global scheduling} and \textit{partition-based scheduling}:
 
-% In \cite{b17}, the authors propose tasks allocation heuristics based on the list by assigning each of them a priority. This list (there is only one list for all the tasks: global approach) determines the order of tasks allocation on different cores of processors. At each step of the heuristic, a task is selected from the list of candidate tasks to be scheduled on core, then the list is updated, this is repeated until the list is empty. This single scheduling strategy is applied to all cores. In other words if dependent tasks are placed on different cores then, the communication cost and the energy consumption are so high. So, the system performance decreases and we obtain a poor quality of service. The goal of this paper is to reduce this communication cost using an optimal allocation of task strategy.  In \cite{b1} which is based on works of \cite{b7}, an heuristic approach to frequently place each Cluster (contains communicating tasks) on the same core or on the nearest core to reduce the cost of communication and adding the verification constraints on core loads. The idea is that the code with the least load will be chosen. 
+\begin{itemize}
+    \item \textbf{Global Scheduling:} In global scheduling, a task may execute on any processor core and is allowed to migrate between cores. A single global ready queue holds all ready jobs, and at each scheduling decision point, the highest-priority job is selected for execution. Essentially, a unified scheduling policy is applied across all cores. This concept is illustrated in Fig.~\ref{fig:global scheduling}.
+    
+    \item \textbf{Partition-based Scheduling:} In partitioned scheduling, tasks are statically assigned to specific cores. Each processor core schedules only the tasks assigned to it using a local uniprocessor scheduling algorithm. Hence, every task is strictly bound to a single core, and all its jobs must execute on that core. The goal is to assign each task either individually or as part of a subset to a particular core. This enables the application of uniprocessor scheduling techniques independently on each core, each maintaining its own task queue~\cite{AbdallahGB24}. This approach is shown in Fig.~\ref{fig:partitioning scheduling}.
+\end{itemize}
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{Global Scheduling.png}
+    \caption{Global scheduling \cite{AbdallahGB24}}
+    \label{fig:global scheduling}
+\end{figure}
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=\linewidth]{Partitioning Scheduling.png}
+    \caption{Partition-based scheduling \cite{AbdallahGB24}}
+    \label{fig:partitioning scheduling }
+\end{figure}
 
+Global scheduling allows optimal task distribution due to migration flexibility. However, implementing efficient and predictable global schedulers for real-time systems has proven challenging. Notably, unlike partitioned scheduling—where the synchronous task arrival pattern represents the worst-case scenario—global scheduling lacks any known finite set of worst-case job arrival sequences. This significantly complicates exact schedulability analysis. As demonstrated in~\cite{sbmbgb}, there exists no optimal online algorithm for global scheduling of constrained-deadline sporadic task systems on two or more processors.
 
-% There are two basic approaches for scheduling real-time tasks on multi-core platforms:
-% \begin{itemize}
-%     \item Global Approach: Each task can execute on any available processor at run time. The objective is to allocate at each instant tasks to cores P. For this, there is a single queue for all tasks and single scheduling strategy is used which applies the set of cores (see Figure 2). In this case, an essen- tial property is that tasks migration is allowed.
+The task allocation problem in partition-based scheduling is equivalent to the well-known \textit{bin-packing} problem, where one must assign $n$ items of varying sizes into $m$ identical bins, a problem known to be NP-hard.
 
-%     \item Partitioned Approach: Each task is assigned to a processor beforehand and during run time it can only execute on this particular processor. The objective is to definitively assign each task to one core or to define subset of tasks each assigned to core.It is thus possible to apply single-core strategies on each of the architecture’s processors, in which each processor has their own execution queue (see Figure 3).
-%     \item Hybrid approach: The hybrid or semi-partitioned approach is derived from the partitioned approach. In this approach, certain occurrences of tasks can be executed on different cores (migration). Each core receives certain tasks after the partitioning heuristic and can perform an exchange of tasks with other cores, this is called task migration. It should be noted that for all these approaches, there is a necessary condition of schedulability, (see equation (3)). 
-% \end{itemize}
+Both global and partitioned scheduling are special cases of \textit{clustered scheduling}, as discussed in Section~\ref{subsec: scheduling approach on multicore architecture}. In clustered scheduling, the processor cores are grouped into clusters, and each recurrent task is statically mapped to one cluster. Migration of a task’s jobs is only permitted within the assigned cluster~\cite{sbmbgb}.
 
-% Recent studies showed that the partitioned approach is superior in scheduling hard real-time systems, for both theoretical and practical reasons. However, partitioned scheduling still suffers from resource waste similar to the bin-packing problem: a task would fail to be partitioned to any of the processors when the total available capacity of the whole system is still large. When the individual task utilization is high, this waste could be significant, and in the worst-case only half of the system resource can be used. 
+Recent research suggests that the partitioned approach outperforms others when it comes to scheduling hard real-time systems—both theoretically and practically. However, it is not without drawbacks. Partitioning can lead to significant resource underutilization: even when the system has enough total capacity, a task might not fit on any individual core. This issue is exacerbated when task utilization is high, potentially restricting system utilization to as little as 50\% in the worst case.
 
-% \subsection{Scheduling}
-% \label{subsec: scheduling}
-% Partitioning a task set is equivalent to the Bin-Packing problem: how to place n objects of different sizes in m identical boxes. This problem is known to be NP-hard. Heuristic-based scheduling algoritms are the most common approaches for task scheduling. These are usually classified into three classes:
-
-% \begin{itemize}
-%     \item Priority-based scheduling: priorities are calculated and assigned to the tasks which are then scheduled on the processors according to their priorities.
-%     \item Duplication-based scheduling: while tasks are allocated to a processor, its parent (and predecessor) tasks are duplicated to occupy the idle times of the processor to eliminate the communication delay that occurs when message is passed from the parent tasks to the allotted task.
-%     \item In cluster-based scheduling, some tasks, that need to communicate among themselves, are grouped together to form a cluster. Clusters are then scheduled on to an available processor. The main problem arises when the number of clusters is greater than the number of processors. This leads to programming the communicating clusters on the same processor and which remains in the nearest processor.
-% \end{itemize}
-
-% \section{Partition-based scheduling mechanism}
-% \label{sec: partition-based scheduling mechanism}
-
-% Static algorithms are those in which scheduling decisions are based on fixed
-% parameters, assigned to tasks before their activation.
-
-% Dynamic algorithms are those in which scheduling decisions are based on
-% dynamic parameters that may change during system evolution.
-
-% An algorithm is said to be heuristic if it is guided by a heuristic function
-% in taking its scheduling decisions. A heuristic algorithm tends toward the
-% optimal schedule, but does not guarantee finding it
+To mitigate this, a \textit{hybrid} or \textit{semi-partitioned} scheduling approach has been proposed. Here, tasks are first allocated via a partitioning heuristic, but selective task migrations are allowed across cores. Cores may exchange some tasks with others—a mechanism referred to as task migration. This enhances flexibility and helps better utilize processor capacity. A semi-partitioned scheduling algorithm consists of two parts: the partitioning algorithm, which determines how to split and assign each task (or rather each part of it) to a fixed processor, and the scheduling algorithm, which determines how to schedule the tasks assigned to each processor \cite{5953668}.
 
 
-\section{Clustering-based scheduling strategy}
+
+It is important to note that for global, partitioned, and hybrid approaches, certain schedulability conditions must be satisfied. These will be discussed in Section~\ref{sec: clustering-based scheduling}.
+
+In~\cite{AbdallahGB24}, a development strategy based on the hybrid approach is proposed, as it reduces communication overhead and energy consumption. Consequently, this results in a feasible and efficient system with improved quality of service. This clustering-based scheduling strategy is further elaborated in Section~\ref{sec: clustering-based scheduling}.
+
+
+\section{Clustering-Based Scheduling Strategy}
 \label{sec: clustering-based scheduling}
 
-\section{Implementation in C}
+In~\cite{AbdallahGB24}, it is assumed that each core schedules tasks locally using the EDF (Earliest Deadline First) algorithm. This section presents the clustering-based task allocation strategy implemented in~\cite{AbdallahGB24}. It is divided into three subsections: the utilization factor in~\ref{subsec: utlization factor}, the communication cost between cores due to their distances in~\ref{communication cost}, and the proposed scheduling strategy in~\ref{subsec: proposed strategy}.
+
+\subsection{Utilization Factor}
+\label{subsec: utlization factor}
+
+According to Liu and Layland~\cite{Fisher2016}, the processor utilization rate by a task $\tau_i$ is given by:
+
+\begin{equation}
+    \upsilon_{\tau_i} = \frac{w_i}{T_i}
+   \label{eq:ut}
+\end{equation}
+
+Here, $w_i$ represents the worst-case execution time of task $\tau_i$, and $T_i$ is its period. The utilization factor for $N$ tasks assigned to core $C_k$ is the sum of the individual utilizations:
+
+\begin{equation}
+   U_{C_k} = \sum_{i=1}^{N} \upsilon_{\tau_i} = \sum_{i=1}^{N} \frac{w_i}{T_i}, \quad \forall k \in [1 \ldots P]
+   \label{eq:utN}
+\end{equation}
+
+A necessary condition for schedulability of tasks on a core is that the total utilization does not exceed 1:
+
+\begin{equation}
+U_{C_k} \leq 1
+\label{eq:utilization_constraint}
+\end{equation}
+
+In~\cite{AbdallahGB24}, each core $C_k \ (k \in [1 \ldots P])$ schedules its assigned tasks locally using EDF. Each core must satisfy the schedulability condition defined in Equation~\ref{eq:utilization_constraint}.
+
+\subsection{Communication Cost}
+\label{communication cost}
+
+Communication between cores is facilitated by a communication medium such as a bus or a Network-on-Chip (NoC). In NoC architectures, the communication cost between a pair of cores $C_k$ and $C_l$ depends on their relative distance and is denoted by $\text{Cost}_{C_k,C_l}$. Let $X_{C_k,C_l}$ be the cost of transferring one byte of data from core $C_k$ to core $C_l$. The cost matrix is defined as:
+
+\begin{equation}
+\text{Cost}_{C_k, C_l} =
+\begin{cases}
+X_{C_k, C_l}, & \text{if } k \ne l,\quad \forall k, l \in [1 \ldots P] \\
+0, & \text{otherwise}
+\end{cases}
+\label{eq:cost_function}
+\end{equation}
+
+The total communication cost is obtained by multiplying $\text{Cost}_{C_k,C_l}$ with the volume of exchanged data, denoted by $SM_{i,j}$, which represents the size of the message exchanged between tasks $\tau_i$ and $\tau_j$ in bytes:
+
+\begin{equation}
+\text{TotalCost} = \sum_{k=1}^{P} \sum_{l=1}^{P} \sum_{i=1}^{N} \sum_{j=1}^{N} \text{Cost}_{C_k, C_l} \cdot SM_{i,j}
+\label{eq:total_cost}
+\end{equation}
+
+\subsection{Proposed Strategy}
+\label{subsec: proposed strategy}
+
+The clustering-based allocation strategy builds on the concept introduced in Section~\ref{subsec: scheduling approach on multicore architecture}. The key idea is to group communicating tasks into clusters (CL) and assign them to the same or neighboring cores to reduce communication overhead. Each core schedules its assigned tasks locally using EDF and must satisfy the schedulability condition from Equation~\ref{eq:utilization_constraint}.
+
+Tasks that frequently communicate are grouped into clusters and allocated to the least loaded core to balance the load and improve system performance. This ensures that the load on each core does not exceed its maximum capacity, maintaining system reliability and real-time performance.
+
+In real-time systems, task dependencies and inter-task communication are critical. When tasks are distributed across different cores, minimizing communication cost becomes essential to maintaining system performance.
+
+The objective of the strategy is to allocate tasks to cores such that total communication cost is minimized while satisfying the utilization constraint. In~\cite{AbdallahGB24}, the proposed strategy is compared with the approaches in~\cite{thatindianpaper} and~\cite{anotherindianpaper}. The system uses a 1-D Mesh network as the communication topology, where cores are connected in a linear array. Each core communicates only with its immediate neighbors.
+
+For example, if Task A resides on Core 0 and needs to communicate with Task B on Core 3, the message must traverse through Core 1 and Core 2—resulting in three hops. To reduce such communication delays, the strategy allocates frequently communicating tasks to the same or nearby cores.
+
+Clusters of tasks are mapped to specific cores that are close to each other in the mesh network. Section~\ref{sec:implementation} will detail the implementation of this strategy in C and present simulation results obtained using UPPAAL.
+
+
+\section{Implementation of Clustering-based algorithm in C}
 \label{sec:implementation}
 
-\section{Simulation and Outcome}
-\label{sec: simulation and outcome}
+The complete working code of the implementation can be found in the following GitHub repository:  
+\href{https://github.com/RubayetKamal/SS2025_Embedded_Engineering/tree/main/Real%20Time%20Systems/PartitionBasedScheduling_In_MulticoreSystems}{github.com/RubayetKamal/SS2025\_Embedded\_Engineering}. This section is divided into 5 subsections where subsection \ref{subsec: clustering} introduces the algorithm used to implement clustering for task allocation used by \cite{AbdallahGB24}. Subsection \ref{subsec: initialization} shows the tasks that are used here as an example and the communication matrix to highlight which task is communicating with which one so that the cluster can be formed. Subsection \ref{subsec: cost calculation}, not only desribes step-by-step on how communication cost between cores are calculated, but also shows code snippet to present the actual implementation. Subsection \ref{subsec: Output} lists the terminal-based output that is received when running the code. Finally, \ref{subsec: simulation} shows a UPPAAL simulation of the
 
 
+\subsection{Clustering}
+\label{subsec: clustering}
+\begin{algorithm}
+\caption{Assign Clusters to Cores}
+\begin{algorithmic}[1]
+\FOR{each cluster in clusters}
+    \STATE Find the least-loaded core that can still take the cluster’s total utilization
+    \STATE Assign all tasks in the cluster to that core
+    \STATE Update the core's utilization
+\ENDFOR
+\end{algorithmic}
+\label{alg:cluster_assignment}
+\end{algorithm}
+
+
+\subsection{Task Initilization and Communication Volume}
+\label{subsec: initialization}
+7 tasks are initiliazed with their core properties, as already discussed: period and worst case execution time. As already states, utilization of core cannot exceed one for a new task to be allocated as shown in equation \ref{eq:utilization_constraint}. Table \ref{tab:task_parameters} show the tasks with their corresponding properties. 
+
+\begin{table}[htbp]
+\centering
+\caption{Task Parameters}
+\label{tab:task_parameters}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Task No.} & \textbf{Execution Time (C)} & \textbf{Period (T)} \\
+\hline
+0 & 1 & 5 \\
+1 & 2 & 10 \\
+2 & 1 & 4 \\
+3 & 2 & 8 \\
+4 & 3 & 4 \\
+5 & 1 & 10 \\
+6 & 5 & 6 \\
+\hline
+\end{tabular}
+\end{table}
+
+Table \ref{tab:task_dependency_matrix} shows the communication volume between tasks. It basically shows how much in bytes are being transferred as message from one task to another. The clustering logic checks if a task can be placed on a core that already has a communicating task and whether the resulting utilization stays under the maximum utilization threshold of 1.
+
+
+\begin{table}[htbp]
+\centering
+\caption{Task Dependency Matrix}
+\label{tab:task_dependency_matrix}
+\setlength{\tabcolsep}{2pt} % Reduce column padding
+\renewcommand{\arraystretch}{2} % Reduce row height
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+ & \textbf{T0} & \textbf{T1} & \textbf{T2} & \textbf{T3} & \textbf{T4} & \textbf{T5} & \textbf{T6} \\
+\hline
+\textbf{T0} & 0 & 5 & 3 & 9 & 0 & 0 & 0 \\
+\textbf{T1} & 5 & 0 & 4 & 7 & 0 & 0 & 0 \\
+\textbf{T2} & 3 & 4 & 0 & 0 & 0 & 0 & 0 \\
+\textbf{T3} & 9 & 7 & 0 & 0 & 0 & 8 & 0 \\
+\textbf{T4} & 0 & 0 & 0 & 0 & 0 & 0 & 7 \\
+\textbf{T5} & 0 & 0 & 0 & 8 & 0 & 0 & 0 \\
+\textbf{T6} & 0 & 0 & 0 & 0 & 7 & 0 & 0 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+The points to notice are the following: Task 0,1,2 and 3 are in constant communication with each other. Therefore if the equation \ref{eq:utilization_constraint} allows, these tasks can be allocated in one core. In this case, the total utilization of these 4 tasks is equal to 0.9 leading to their allocation in Core 0. Task 5 on the other hand only is in communication with Task 3. Therefore the utilization of this task has to comply wth equation \ref{eq:utilization_constraint} for the core. As Task 5 only has 0.1 as utilization, the task was able to be allocated in Core 0 forming the cluster. Task 4 and 6 only communicate among each other. This leads to these two tasks forming a cluster. However, once Task 4 is allocated in Core 1, the utilization constrain does not allow Task 6 to be placed in Core 1. This leads to Task 6 being placed in the neighbouring core of Core 2. The allocation of Task 2 in a core near to Core 1 reduces the communication cost between Core 1 and Core 2.
+ This is shown here in the terminal output:
+
+\subsection{Cost calculation}
+\label{subsec: cost calculation}
+Equations \ref{eq:cost_function} and \ref{eq:total_cost} dicussed in subsection \ref{sec: clustering-based scheduling} are used to calculate the total communication cost between cores. 
+
+The function \texttt{Calculating\_TotalCommunicationCost()} is responsible for computing the total communication cost incurred by the task-to-core mapping in a multi-core system. It begins by initializing a variable \texttt{totalCost} to zero. This variable accumulates the overall communication cost resulting from interactions between tasks assigned to different cores.
+
+The function iterates over every possible pair of cores in the system using two nested loops. Let us denote the outer loop index as \texttt{firstCore} and the inner loop index as \texttt{secondCore}. For each core pair, it proceeds to examine all pairs of tasks, where one task belongs to \texttt{firstCore} and the other to \texttt{secondCore}. This is achieved through another two nested loops that traverse the list of assigned tasks for each core.
+
+For each task pair, the function identifies two tasks: \texttt{firstTask} assigned to \texttt{firstCore} and \texttt{secondTask} assigned to \texttt{secondCore}. It then calculates the communication cost between these tasks by multiplying two quantities:
+\begin{itemize}
+    \item \texttt{communicationVolume[firstTask][secondTask]}, which represents the volume of data or messages exchanged between the tasks.
+    \item \texttt{costMatrix[firstCore][secondCore]}, which captures the communication cost between the two cores themselves (often modeled as distance or latency).
+\end{itemize}
+
+The product of these two terms gives the cost of communication between the selected pair of tasks, considering both the data exchanged and the penalty associated with inter-core communication. This cost is added to the running total \texttt{totalCost}.
+
+The function continues this process for all combinations of core pairs and their respective assigned tasks. After all relevant combinations have been evaluated, the function returns \texttt{totalCost}, which reflects the complete communication burden introduced by the current allocation of tasks to cores. This metric is critical for assessing the efficiency of clustering algorithms in minimizing communication overhead.
+
+List \ref{lst:total_comm_cost} shows a code snippet of the implementation of calculating total communication cost. 
+
+\begin{lstlisting}[caption={Function to calculate total communication cost}, label={lst:total_comm_cost}]
+float Calculating_TotalCommunicationCost() {
+    float totalCost = 0.0;
+
+    for (int firstCore = 0; firstCore < numberOfCores; firstCore++) {
+        for (int secondCore = 0; secondCore < numberOfCores; secondCore++) {
+
+            for (int i = 0; i < cores[firstCore].num_tasks; i++) {
+                for (int j = 0; j < cores[secondCore].num_tasks; j++) {
+
+                    int firstTask = cores[firstCore].assigned_tasks[i];
+                    int secondTask = cores[secondCore].assigned_tasks[j];
+
+    totalCost += costMatrix[firstCore][secondCore] * 
+                communicationVolume[firstTask][secondTask];
+                }
+            }
+        }
+    }
+
+    return totalCost;
+}
+\end{lstlisting}
+\subsection{Output}
+\label{subsec: Output}
+And finally, the output from the terminal is as follows, as already discussed from the implementation of total communication cost along with the clustering algorithm described in algorithm \ref{alg:cluster_assignment}. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Allocation of Tasks on cores.png}
+    \caption{Allocation of Tasks on cores}
+    \label{fig:enter-label}
+\end{figure}
+%  \begin{lstlisting}
+% myenvrubayetkamal@Rubayets-MacBook-Air Partition based scheduling on multi-core system % ./main                      
+% Core 0 [Util: 1.00]: T0 T1 T2 T3 T5 
+% Core 1 [Util: 0.75]: T4 
+% Core 2 [Util: 0.83]: T6 
+% Total Communication Cost: 33.00
+% \end{lstlisting}
+
+\subsection{Simulation}
+\label{subsec: simulation}
+Fig. \ref{fig:UPPAAL} shows the sequence of how the scheduler and the allocation algorithms are synchronized. EDF is not used in this simulation die to time limitation and level of complication of the system. Only the first core is simulated which waits for cores to be allocated once they pass the utilization test. After that, it is up to the scheduler to execute the task in a particular order. 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{UPPAAL.png}
+    \caption{UPPAAL}
+    \label{fig:UPPAAL}
+\end{figure}
 
 \section{Conclusion}
-\label{sec: conclusion}
+\label{subsec: conclusion}
+In this paper, partition-based scheduling of multi-core real-time systems is explored.  The problem of periodic tasks allocation on a homogeneous multi-core architecture using tasks clustering is discussed. The clustering-based scheduling algorithm, inspired from \cite{AbdallahGB24} is implemented in C and later simulated in UPPAAL. The output of the proposed solution shows tasks with frequent communication among each other form a cluster and they are allocated on cores close to each other to reduce communication cost, provided that all cores pass the schedulability test. 
 
-
-\section*{Acknowledgment}
-
-
-% \begin{thebibliography}{00}
-% \bibitem{b1} H. Ben Abdallah, H. Gharsellaoui, and S. Bouamama, "A Novel Partitioning Approach for Real-Time
-% Scheduling of Mixed-Criticality Systems," in Proceedings of the 16th International Conference on
-% Agents and Artificial Intelligence, Rome, Italy, 2024, pp. 882–889.
-% \bibitem{b2} N. Abdallah, A. Queudet, M. Chetto and R. H. Chehade, "Partitioned EDF scheduling in multicore systems with quality of service constraints," 2011 18th IEEE International Conference on Electronics, Circuits, and Systems, Beirut, Lebanon, 2011, pp. 764-767, doi: 10.1109/ICECS.2011.6122386. keywords: {Real time systems;Quality of service;Sorting;Processor scheduling;Partitioning algorithms;Optimal scheduling;Energy consumption}.
-% \bibitem{b3} J. Zamorano, J. Puente, "On real-time partitioned multicore systems," Universidad Polite´cnica de Madrid (UPM), Spain, 2013 
-% \bibitem{b4} N. Guan, M. Stigge, W. Yi and G. Yu, "Fixed-Priority Multiprocessor Scheduling with Liu and Layland's Utilization Bound," 2010 16th IEEE Real-Time and Embedded Technology and Applications Symposium, Stockholm, Sweden, 2010, pp. 165-174, doi: 10.1109/RTAS.2010.39. keywords: {Processor scheduling;Scheduling algorithm;Real time systems;Multiprocessing systems;Application software;Information technology;Computer science;Partitioning algorithms;Testing;H infinity control;real-time systems;utilization bound;multiprocessor;fixed priority scheduling}
-% \bibitem{b5} Y. Zhang, N. Guan, Y. Xiao and W. Yi, "Implementation and empirical comparison of partitioning-based multi-core scheduling," 2011 6th IEEE International Symposium on Industrial and Embedded Systems, Vasteras, Sweden, 2011, pp. 248-255, doi: 10.1109/SIES.2011.5953668. keywords: {Real time systems;Scheduling;Processor scheduling;Sleep;Linux;Context;Data structures} 
-% \bibitem{b56} 2013 IEEE 21st International Symposium on Modelling, Analysis and Simulation of Computer and
-% Telecommunication Systems: IEEE, 2013.
-% \bibitem{b7} P. Bhardwaj and V. Kumar, "An Effective Load Balancing Task Allocation Algorithm using Task
-% Clustering," IJCA, vol. 77, no. 7, pp. 32–39, 2013, doi: 10.5120/13410-1064.
-% \bibitem{b8} G. C. Buttazzo, Hard Real-Time Computing Systems. Boston, MA: Springer US, 2011.
-% A. Crespo, M. Masmano, J. Coronel, S. Peiró, P. Balbastre, and J. Simó, "Multicore partitioned
-% systems based on hypervisor," IFAC Proceedings Volumes, vol. 47, no. 3, pp. 12293–12298, 2014,
-% doi: 10.3182/20140824-6-ZA-1003.02410.
-% \bibitem{b9}Z. Dong, J. Wang, G. F. Riley, and S. Yalamanchili, "A Study of the Effect of Partitioning on Parallel
-% Simulation of Multicore Systems," in 2013 IEEE 21st International Symposium on Modelling, Analysis
-% and Simulation of Computer and Telecommunication Systems, San Francisco, CA, USA, 2013, pp.
-% \bibitem{b10} 2021 IEEE 27th Real-Time and Embedded Technology and Applications Symposium (RTAS): IEEE,
-% 2021.
-% \bibitem{b11}H. Kopetz, Real-Time Systems. Boston, MA: Springer US, 2011.
-
-% \bibitem{b12}Proceedings of the 16th International Conference on Agents and Artificial Intelligence: SCITEPRESS -
-% Science and Technology Publications, 2024.
-% [15] N. Saranya and R. C. Hansdah, "Dynamic Partitioning Based Scheduling of Real-Time Tasks in
-% Multicore Processors," in 2015 IEEE 18th International Symposium on Real-Time Distributed
-% Computing, Auckland, New Zealand, 2015, pp. 190–197.
-% \bibitem{b13}V. Sarkar, "Partitioning and scheduling parallel programs for multiprocessors,"
-% \bibitem{b14}"Scheduling Algorithms for Multiprogramming in a Hard- Real-Time Environment,"
-% \bibitem{b15}J. Wang, T. Zhang, D. Shen, X. S. Hu, and S. Han, "APaS: An Adaptive Partition-Based Scheduling
-% Framework for 6TiSCH Networks," in 2021 IEEE 27th Real-Time and Embedded Technology and
-% Applications Symposium (RTAS), Nashville, TN, USA, 2021, pp. 320–332.
-% \bibitem{b16} K. M. K. Abdelsalam, S. M. Khamis, H. M. Bahig, and H. M. Bahig, "A multicore-based algorithm for
-% optimal multi-way number partitioning," Int. j. inf. tecnol., vol. 15, no. 6, pp. 2929–2940, 2023, doi:
-% 10.1007/s41870-023-01328-1.
-% \bibitem{b17} K. Zhu and Y. Ding, "Research on Low Power Scheduling of Heterogeneous Multi Core Mission Based on Genetic Algorithm," 2017 9th International Conference on Measuring Technology and Mechatronics Automation (ICMTMA), Changsha, China, 2017, pp. 219-223, doi: 10.1109/ICMTMA.2017.0059. keywords: {Multicore processing;Scheduling;Power demand;Algorithm design and analysis;Partitioning algorithms;Scheduling algorithms;Genetic algorithm;heterogeneous multi-core;key task;low power scheduling;algorithm research},
-% \bibitem{b18} Zhang, H. (2012). ordonnancement de tâches temps réel dans les systèmes multicoeur. PhD thesis, Université de Nantes.
-% \bibitem{b19} Huang, J. and Raabe, A. (2011). Energy-aware task allocation for network-on-chip based heterogeneous multiprocessor systems. In Parallel, Distributed and Network-Based Processing (PDP), 2011 19th Euromicro International Conference on, page 447–454. IEEE.
-
-
-
-
-% \end{thebibliography}
-% \vspace{12pt}
-% \color{red}
-% IEEE conference templates contain guidance text for composing and formatting conference papers. Please ensure that all template text is removed from your conference paper prior to submission to the conference. Failure to remove the template text from your paper may result in your paper not being published.
 \printbibliography
 
 \end{document}
