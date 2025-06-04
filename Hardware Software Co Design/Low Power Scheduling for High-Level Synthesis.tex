@@ -1,12 +1,58 @@
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
-\usepackage{cite}
+%\usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{algorithmic}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage[utf8]{inputenc}
+\usepackage[backend=bibtex]{biblatex}
+\addbibresource{references.bib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[hidelinks]{hyperref}
+\usepackage{textgreek}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily,
+  breaklines=true,
+  frame=single,
+}
+\usepackage{amsthm}
+
+% Define theorems and definitions
+\newtheorem{definition}{Definition}
+
+
+
+\lstset{
+  language=C,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{green!60!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=5pt,
+  backgroundcolor=\color{gray!10},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  frame=single,
+  tabsize=2,
+  captionpos=b,
+  breaklines=true,
+  breakatwhitespace=false,
+  escapeinside={(*@}{@*)}
+}
+
+
+
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
@@ -27,7 +73,7 @@ rubayet.kamal@stud.hshl.de}
 \maketitle
 
 \begin{abstract}
-Low power design has become a critical factor in the technical and commercial success of modern hardware systems. High Level Synthesis (HLS) involves transforming a behavioral description into a structural RTL-level netlist through scheduling, allocation, and binding \cite{b1} \cite{b2}.The aim of this paper is to discuss integrated low power methods within the scheduling process of the HLS performed in \cite{b3}. The goal is to minimize switching activity and utilize low-power modules while meeting performance constraints, ultimately achieving a balance between size, performance, and energy efficiency. The scheduler discussed is known as the Power Scheduler \cite{b1} which identifies mutually exclusive operation paths, analyzes their activity profiles, and partitions them using a compatibility graph and clique search algorithm. Each resulting partition has a controlled activation or deactivation mechanism meaning they can be switched off when not used. 
+Low power design has become a critical factor in the technical and commercial success of modern hardware systems. High Level Synthesis (HLS) involves transforming a behavioral description into a structural RTL-level netlist through scheduling, allocation, and binding \cite{Ret} \cite{DDG92}.The aim of this paper is to discuss integrated low power methods within the scheduling process of the HLS performed in \cite{Ret}. The goal is to minimize switching activity and utilize low-power modules while meeting performance constraints, ultimately achieving a balance between size, performance, and energy efficiency. The scheduler discussed is known as the Power Scheduler \cite{article} which identifies mutually exclusive operation paths, analyzes their activity profiles, and partitions them using a compatibility graph and clique search algorithm. Each resulting partition has a controlled activation or deactivation mechanism meaning they can be switched off when not used. Finally, the paper presents an example, where the methods discussed is implemented. The example is the realization of different algorithms of the video processing in a so called Hardware-Accelerator (HW-Accelerator) based on the special asynchronous hardware.
 \end{abstract}
 % Traditional approaches often focus on power estimation at the RTL or gate level; however, design decisions made at the algorithmic and architectural level have a significantly greater impact on overall power consumption [x].
 \begin{IEEEkeywords}
@@ -35,52 +81,353 @@ high level synthesis, scheduling, dynamic and static power, clique search algori
 \end{IEEEkeywords}
 
 \section{Introduction}
-This document is a model and instructions for \LaTeX.
-Please observe the conference page limits. 
+\label{sec: introduction}
+The demand of personal computing devices and wireless communications equipment are ever increasing. Therefore, the demand for designing low power consuming circuits has increased. Reducing power consumption has become the 3rd important parameter along with area and run-time as per \cite{Saraju01}. 
 
-\section{Related Work}
+Power management of low-power battery operated systems is a challenge for designers of application specific integrated circuit (ASIC) and system-on-chip (SoC). Designing for these low-power systems is a critical requirement for a chip's success. Failing to meet the power challenge can lead to increase in the cost of ownership of the chip and system. Three factors are the key drivers when it comes to designing ASIC and SoC: area, performance and power. However, in the early days, area and performance were given more importance when designing chips. The rise of design failures have lead to minimization of power being the most important objective to designers. The traditional approach of designing for low-power is time consuming and unreliable. Hence, a methodology \cite{Ret} for low power design to save power at all digital levels is dicussed in this paper. 
+
+The varying workload of the system can be exploited to manage power. Turning off all inactive parts of the design, or to turn them into low-performance, low-power states is a good idea. Techniques such as clock gating, power down techniques or dynamic reduction of clock frequency and/or supply voltage are known to achieve this. 
+
+Two types of power dissipation can take place: static and dynamic. Logic gates that change state from Low to High or vice versa contribute to dynamic power dissipation. These switching of gates require charging of internal capacitors, therefore consuming power. On the other hand, static power dissipation takes place when the logic gates are at a fixed state (0 or 1) at which no power consumption is theoretically expected. However, in the real-world, due to leakage current passing through the transistors, certain amount of power is consumed. 
+
+Idleness of a device can be exploited to deal with the power consumption due to leakage current. This is done by turning off the power supply or increasing the threshold voltage of transistors during periods of inactivity. According to \cite{Ret}, such idle periods can be identified at higher levels of abstraction. 
+
+Dynamic power depends linearly on frequency and quadratically on voltage, therefore reducing these parameters locally as much as throughput allows will lead to reduction in power consumption. This may require introducing new voltage and clock domains. 
+
+All important issues regarding power must be addressed earlier in the cycle. That's why designers now focus on power closure early in the design cycle. Relying primarily on the reduction of physical attribites of transistors  for power optimistation is not ideal anymore. As per \cite{Ret}, major improvements can be achieved prior to Register-Transfer-Level (RTL). At RTL, savings potential is much larger and design changes are more easily implemented. 
+
+
+The method presented in this paper, inspired by \cite{Ret}, aims to integrate low-power techniques into the scheduling process of High-Level Synthesis (HLS) by defining partitions. During HLS, a behavioral description is mapped to a Register Transfer Level (RTL) structure. Starting with a Control-Data-Flow Graph (CDFG), the proposed method employs standard scheduling techniques and path analysis on the graph to identify regions that can be grouped into partitions. The main goal of the developed low power approach is to partition the design during the scheduling task of the HLS. Each partition allows the integration of dedicated activation or deactivation mechanisms into the design. That means, if a partition is not active, it can be turned off to reduce power consumption.
+
+
+The structure of the paper is as follows: Section \ref{sec: fundamentals} HLS along with various sources of power consumption are discussed. Additionally, an introduction to scheduling is provided before diving into the proposed power scheduler discussed in section \ref{sec: power scheduler}. The section describes in detail the developed Power Scheduler including all executed tasks (scheduling, path analysis and partitioning). Moreover, section \ref{sec: hw accelerator} implements the proposed power scheduler in an example. This example shows the realization of different algorithms of the video processing in a HW-Accelerator based on the special asynchronous hardware. Finally, section \ref{sec: conclusion} concludes the paper and summarizes the main contributions. 
 
 
 
-\section{Fundamentals}
+\section{Background knowledge}
+\label{sec: fundamentals}
+Reducing power consumption in VLSI circuits (Very-Large-Scale Integration) can be achieved by: reducing chip and package capactiance, scaling the supply voltage, better design techniques and power management strategies. However, reducing chip and package capactiance is expensive requiring cutting-edge fabrication process. Also, scaling supply voltage, such as lowering voltage, will contribute to reducing dynamic power consumption but is not ideal due to the need of extra circuits to convert voltage. Better design techniques are cost-effective as no additional hardware is required. Additonally, power management strategy such as dynamically turning off unused parts of a chip to save power can help achieving significant power savings. Therefore, HLS techniques are necessary now to target lower power dissipation in the circuit.
+
+This section is organized as follows: In subsection \ref{subsec: HLS} HLS in general is discussed. Furthermore, section \ref{subsec: comparison of traditional and modern synthesis} contrasts traditional low-power design methods with modern, system-level approaches that use HLS. The emphasis is on how power optimization should start at the system level, rather than waiting until RTL or gate-level stages. An overview of allocation and binding algorithms for low-power design are given in section 2.7. Additionally, a guidance how to make low-power design are briefly described in 2.8
 
 
-\subsection{Conclusion}
+\subsection{High Level Synthesis}
+\label{subsec: HLS}
+The HLS process is basically a translation function from behavioral to a structural description \cite{DDG92}.During analysis phase, the behavior of a given circuit is studied where the focus in on understanding the behavior of the given structure. On the other hand, during the synthesis phase, for the given behavior, the goal is to determine and analyze the structure of the circuit in order to design it. The so called behavior of the system refers to the ways the system or its component interact with their environment. And the structure refers to the set of interconnected components, usually described by a netlist, that constitute the system. 
+
+HLS is quite similar to the construction of compilers that translates high-level languages to assembly. As per \cite{52214} HLS process is to take the specifications of the behavior required for a system and a set of constraints and goals to be satisfied, and to find a structure that implements the behavior while satisfying the goals and constraints. The HLS is different from logic synthesis. In the case of logic synthesis, the system is specified in terms of logic equations, which must be optimized and mapped into a given technology. Logic synthesis is applied after HLS in a design process.
+Fig. \ref{fig:HLS Design Flow} shows the design phases of HLS. Usually the input to the High-Level Synthesis is a control data flow graph, called CDFG. More about the design flow will be discussed in upcoming subsections and specially in the section \ref{sec: power scheduler}. The HLS process consists of three phases which can be performed in any order depending upon the design flow: 
+\begin{itemize}
+    \item Scheduling: determines when each operation in the algorithm will be executed—i.e., which clock cycle.
+    \item Allocation: decides what resources (e.g., adders, multipliers, registers) are needed and how many.
+    \item Binding (assignment): maps operations to specific, allocated resources.
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{HSL Design Flow.png}
+    \caption{HLS Design Flow}
+    \label{fig:HLS Design Flow}
+\end{figure}
+
+
+As many different structures can be used to realize a given behavior, one important task of the synthesis process is to find the structure that best meets the constraints, such as area, cycle time, power, cost, etc. The aim of a low power synthesis is to meet the power constraint and to satisfy the design constraints. Synthesis can take place at various levels of abstraction. Fig. \ref{fig:gazzky} displays the structuring according the Gajski Y-Chart where Gajski introduces the six design levels starting from system level to layout level. There exist three views on each level, that are namely the geometry, structure, and behavior. Looking at this fig. \ref{fig:gazzky}, it can said that the task of the HLS is to transform a behavioral description on algorithmic level to a structural description on register-transfer level \cite{DDG92}.
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Gazzky Y chart.png}
+    \caption{Gazzky Y Chart \cite{Ret}}
+    \label{fig:gazzky}
+\end{figure}
+
+\subsection{Comparison of Traditional and Modern Synthesis}
+\label{subsec: comparison of traditional and modern synthesis}
+In traditional approach, power estimation is usually done after RTL/gate-level design, requiring multiple redesign iterations to meet power targets. Simple datapath tweaks may reduce power by ~30\% (but still take weeks) and reducing power consumption by ~75\% need full architectural/algorithmic changes, which may take months and impact cost/performance. Analysis of final physical layout helps identify "hot spots" (i.e., transistors with high power density) but does not reduce chip-wide power. The modern approach focuses on system-Level design which starts at a high-level specification (in C/C++ or SystemC). Algorithms are analyzed and optimized for function-level power which allows architectural exploration before synthesis, reducing design time and improves power efficiency.
+
+In system-level design, it is necessary to develop and use power-optimal algorithms and architectures. It should be noted that system-level optimization targets dynamic power consumption, which is calculated from four factors, namely clock frequency, the square of the supply voltage, load capacitance and average switching activity. Short-circuit power and leakage power are optimized at lower levels of abstraction. More about power dissipation is discussed in subsection \ref{subsec: power}.
+
+\subsection{Power Dissipation}
+\label{subsec: power}
+It has already been discussed in section section\ref{sec: introduction} about two different types of power dissipation: dynamic and static. Fig. \ref{fig:source of power dissipation} shows 
+sources of these power dissipation \cite{Saraju01}. 
+
+Leakage current arises due to imperfections in the transistor when it is technically supposed to be "off." Even when a transistor is not conducting, some tiny amount of current leaks through due to subthreshold conduction and reverse-biased diodes. Standby current is the DC current that continuously flows from the power supply ($V_{dd}$) to ground, even when the circuit is idle or not switching. The equation \ref{eq:2.2} displays the total static power dissipation where n is the number of transistors:
+
+\begin{equation}
+\label{eq:2.2}
+P_{\text{static}} = \sum_{i=1}^{n} I_{\text{leakage,i}} \cdot V_{\text{dd}}
+\end{equation}
+
+During the brief moment when a CMOS gate switches from one state to another (e.g., from 0 to 1), both the PMOS and NMOS transistors can be partially on, creating a short direct path from $V_{dd}$ to ground. Although short-lived, repeated transitions can add up and waste significant power, especially in high-speed circuits. As per \cite{1052168}, short-circuit power dissipation accounts for less than 20\% of dynamic power in a well-designed circuit. Therefore, the largest contributor to total power in active CMOS circuits is due to capacitive switching.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Sources of power dissipation.png}
+    \caption{Source of power dissipation}
+    \label{fig:source of power dissipation}
+\end{figure}
+
+Capacitive switching power dissipation is caused by charging and discharging of parasitic capacitance in the circuit \cite{Saraju01}. It is given by the following equation:
+\begin{equation}
+P_{\text{dynamic}} = \frac{1}{2} \cdot C_L \cdot V_{dd}^2 \cdot \alpha \cdot f
+\label{eq: powereq}
+\end{equation}
+
+
+where $C_L$ is the load capacitor, $V_{dd}$ is the supply voltage, $α$ is the average or expected number of transitions per clock cycle also known as the switching activity, and $f$ is the clock frequency. Therefore, varying these parameters can affect dynamic power as well as overall energy consumption. 
+
+However, these parameters are dependent on one another. This means some sort of trade-off has to happen in order to come to an optimised solution. 
+% There are many scheduling algorithms with ob-
+% jective function as power/energy minimization. In this section algorithms of each basic low-power design key principle is briefly discussed:
+
+% \begin{itemize}
+%     \item Multiple supply voltage (MVS) scheduling: Different supply voltages can be assigned to different operations. Lower voltages save power but make operations slower for which the scheduler must carefully decide which operation to assign to which voltage, and when to schedule them, so that the overall execution still finishes on time.
+%     \item Frequency variation scheduling:
+%     \item Scheduling based on switching activity:
+% \end{itemize}
+
+
+\subsection{Graphs and Scheduling Algorithms}
+\label{subsec: power}
+The CDFG consists of two inter-weaved graphs, a so called Control-Flow-Graph (CFG) and a Data-Flow-
+Graph (DFG). The graphs are defined as follows:
+\begin{definition}[Control-Flow Graph (CFG)]
+\label{def:cfg}
+Let $G = (V_c, E_c)$ be a directed graph, with the set of nodes $V_c = \{v_1, v_2, \ldots, v_n\}$. Each $v_i$ is a control object of a given algorithm. An edge $(a_s, a_t)$ with $a_s, a_t \in V_c$ describes the transition from one control object to another. This can also be interpreted as the transition from one state of the system to the following state.
+\end{definition}
+
+\begin{definition}[Data-Flow Graph (DFG)]
+\label{def:dfg}
+Let $G = (V_d, E_d)$ be a directed graph, with the set of nodes $V_d = \{v_1, v_2, \ldots, v_n\}$. Each $v_i$ corresponds to an operation, a fork, or a join of a given algorithm. An edge $(a_s, a_t)$ with $a_s, a_t \in V_d$ describes the data dependencies between the different nodes.
+\end{definition}
+
+According to \cite{Saraju01}, scheduling algorithms can be classified in unconstrained and constrained algorithms. Unconstrained scheduling are to be used: 
+\begin{itemize}
+    \item when resources are cheap or wiring is the bottleneck
+    \item when every operation uses a different type of resource
+    \item when resource assignment is done before scheduling
+    \item To estimate the best and worst possible execution time (ASAP \& ALAP)
+    
+\end{itemize}
+As- Soon-As-Possible (ASAP) and As-Late-As-Possible (ALAP) scheduling are examples of unconstrained scheduling. ASAP solves the minimum latency scheduling problem which means scheduling all operations in a way that respects dependencies and finishes as early as possible. ASAP gives the earliest start times possible and if we have a time limit, we can use it to check whether the tasks can finish on time. On the other hand, ALAP schedules each task as late as possible, without missing the overall time limit. It helps understand the latest time each task can start while still meeting the total time goal. Mobility of a task is the difference between its ALAP and ASAP start times. It helps in resource allocation and optimizing performance vs area. When mobility is 0, it means that tasks don't flexibility meaning they must start at a specific time. 
+
+
+Constrained algorithms can be divided into the following groups: resource constrained, time constrained, time and resource constrained and miscellaneous algorithms:
+\begin{itemize}
+    \item Resource constrained algorithms are list-based, ILP-based and static list scheduling algorithms.
+    \item Time constrained algorithms are force- directed, ILP-based, iterative refinement, force-directed list-scheduling and freedom-based scheduling.
+    \item Time and resource constrained algorithms are ILP-based and feasible-constrained based scheduling.
+    \item The group of miscellaneous scheduling algorithms consists of path-based, simulated annealing, genetic, symbolic and geometric algorithms. 
+\end{itemize}   
+
+The power scheduler discussed in this paper uses ASAP and ALAP scheduling to calculate some necessary timing information. However, the use of a path-based analysis technique groups the power scheduling algorithm in miscellaneous scheduling algorithms.  
+
+\cite{52214} classified algorithms for scheduling two different classes compared to the constrained and unconstrained discussed above: 
+\begin{itemize}
+    \item Transformational: All algorithms in the transformational class of algorithms begin with a default schedule and apply so called transformations to obtain other schedules. These algorithms differ in how they choose what transformations to apply.
+    \item Iterative:  In the iterative/constructive class of algorithms a schedule is built up by adding operations one at a time until all the operations have been scheduled. These algorithms differ in how the next operation to be scheduled is chosen and in how they determine where to schedule each operation. Typical iterative/constructive scheduling algorithms are ASAP, ALAP, List scheduling, Freedom-based scheduling, Force-directed scheduling, and Force-directed List scheduling, see \cite{german97}.
+\end{itemize}
+% The approach presented in this thesis tries to partition a given CDFG. Each partition can be active or deactivated depending on if it is needed or not. The basic idea is to build large partitions to reduce the additional costs needed for the control activation mechanism. In our approach we could use gated clock, guarded evaluation and power down. This are power management principles on a hardware level. Later on, we will see that our approach   
+
+
+% \subsection{Allocation and Binding}
+% \label{subsec: allocation}
+
+%  In the allocation task variables and operators of the CDFG are bound to registers and functional modules. Furthermore, the interconnection among mod- ules and registers in terms of multiplexors or buses are constructed. Alloca- tion is further divided into the following tasks:registers allocation • module allocation • interconnect allocation These three operations are handled sequentially and the resulting circuit is of- ten require more interconnect than necessary. Resource sharing refers to the use of the same hardware resource, like functional units or register, to per- form different operations or store more than one variable.In literature register sharing is also known as register optimization. 
 
 
 
+\section{Power Scheduler}\label{AA}
+\label{sec: power scheduler}
+The main goal of the developed low power approach is to partition the design during the scheduling task of the HLS. Each partition allows the integration of dedicated turn-on and turn-off mechanisms into the design. That means, if a partition is not active, it can be turned off to reduce power consumption. The partitioning is described in detail in the following sections. The methodology and experimental results are given in sections 3.3 and 3.11.
+\subsection{Overview}
+Fig. \ref{fig:HLS Design Flow} shows the design flow for HLS. The aim of the work done in \cite{Ret} is to integrate low power methods within the scheduling process of HLS. The developed system, known as the power scheduler, is embedded into HLS design flow.The Power scheduler, a path-based scheduling technqiue, replaces the existing scheduler of a HLS system. Therefore, it is an alternative scheduling technique to integrate power reduction. It can be seen in fig. \ref{fig:power scheduler} that an unscheduled CDFG as an input produces a scheduled low-power CDFG. The CDFG represents the controller for the DFG and the DFG is the data-path of the given algorithm. Each node in CDFG correspond to operations and each directed edge represent data dependency. 
 
+The first goal is to have dedicated turn-on and turn-off mechanisms into the design and the second goal is to minimize the additional control componenets for the activation and deactivation of the partitions. This could be achieved by combining partitions. 
+
+Let us assume that the target system consists of $n$ components $\{k_1, \ldots, k_n\}$. At each time step, a component $k_i$, where $i \in \{1, \ldots, n\}$, is either active or inactive. The goal is to group these components into $m$ partitions $\{p_1, \ldots, p_m\}$, where each partition $p_j$, with $j \in \{1, \ldots, m\}$, contains a subset of components $\{k_s, \ldots, k_r\}$. The primary objective is to minimize the number of partitions $m$, as a smaller number of partitions reduces the control overhead required for activation and deactivation.
+
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=1\linewidth]{Power Scheduler.png}
+%     \caption{Power Scheduler Design Flow}
+%     \label{fig:Power Scheduler}
+% \end{figure}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{Power Scheduler.png}
+    \caption{Power Scheduler}
+    \label{fig:power scheduler}
+\end{figure}
+
+It all starts with a High-Level specification which is transformed into behavioral VHDL source code. These descriptions are transformed into internal formats known as the CDFG. This CDFG, which describes the design, is the input to the Power Scheduler. This Power Scheduler reads the CDFG, consisting of CFG and DFG, and store the graphs into internal data format. After that the power scheduler uses ASAP and ALAP on the DFG to calculate the mobility of each operation within the DFG. The next step is path calculation. In this step, the system is trying to identify which parts of the design (paths) are active or inactive at different times during operation. Instead of just turning off unused parts at each step, all the possible paths of activity ahead of time are analyzed. This is done in three phases:
+\begin{itemize}
+    \item Disjoint paths: paths that never work at the same time. Some of these paths are not active during the entire run-time of the system.
+    \item Fork and join nodes: where the circuit splits and joins meaning paths that do not run at the same time. The different paths between the fork and join nodes are the basis for the partitioning construction, because they are alternatively active during the run-time.
+    \item Control paths: paths that happen based on decisions. That means, if it is applicable to schedule them as soon as possible different paths can be identified which are alternatively active during run-time.
+\end{itemize}
+The examined paths are the basis of the partitioning and they are combined to partitions. All paths are nodes in a so called compatibility graph. 
+
+The fourth step of the Power Scheduler is to build the partitions by combining the paths that are calculated in the second step. To do this it is necessary to examine if there are so called conflicts between the paths. Two paths are in conflict to each other if they are for example both depending from the same fork, join or control node. Each path corresponds to a node in a so called compatibility graph. The edges in the compatibility graph shows if the nodes are compatible with each other. That means, compatible nodes can be combined to a partition that can be turned on and off. Thereafter, a clique search algorithm is implemented that is used for finding cliques in the compatibility graph. Finally, a clique builds a partition than can be activated or deactivated during the run-time to save energy. During this step the CDFG will also be scheduled.
+
+Turning something on or off in hardware uses extra power in both the circuit and the control logic. So, instead of controlling each tiny path separately, the scheduler groups compatible paths together into partitions. These partitions can be activated/deactivated efficiently. Nevertheless, it could be possible that after
+the clique approach a partition contains only one path.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Steps of the Power Scheduler.png}
+    \caption{Step of the power scheduler}
+    \label{fig:steps of the power scheduler}
+\end{figure}
+
+\subsection{Power Reduction Methods}
+\label{subsec: power reduction methods}
+In this section we describe the low power reduction methods that are used within the Power Scheduler. It is possible to combine all methods or to apply only one method for a design.
+
+\begin{itemize}
+    \item Gated Clock: To reduce dynamic power gated clocks can be applied. The clock signal goes to an AND gate. If the clock enable signal is set to true the clock is directed to the storage elements of the logic block. Hence, only storage elements are driven with a clock signal and no arithmetic logic. An ALU (arithmetic logical unit) needs a clock for an internal carry register. Nevertheless, if the clock is not directed to the storage elements the switching activity is set to zero and that reduces the dynamic but not the static power consumption.
+    \item A guard in this case corresponds to a storage element (like registers) with write enable signal, see figure 3.5. If the write enable signal is set to false the registers don’t write the incoming data to the output. Therefore, there is now switching activity in the logic block behind the register and this reduces the dynamic power consumption similar to the gated clock technique.
+    \item With power down is it possible to reduce the dynamic and the static power consumption. Power pins can be separately controlled. That means, if the power goes down for one area there is no switching activity. This reduces the dynamic power consumption, but besides this the static power is also reduced, because everything is switched off.
+\end{itemize}
+
+\subsection{Cost Function}
+\label{subsec: cost function}
+Equation \ref{eq: powereq} shows the formula for dynamic power dissipation. The power of a gate is given by equation \ref{eq: node eqauation}
+\begin{equation}
+P_{\text{dynamic}} = \frac{1}{2} \cdot C_L \cdot V_{dd}^2  \cdot f_{clk}
+\label{eq: node eqauation}
+\end{equation}
+where $C_L$ is the capacity of the node and $f_{clk}$ is the clock frequency. Therefore it can be said that dynamic power of the code can be calculated by simply multiplying the switching activity, $\alpha_{node}$ of the node. During HLS process, the switching activity is not easy to predict, therefore $\alpha_{node}$ is assumed as 1. 
+
+Summing up the dynamic power of all nodes gives the total power dissipation of a design as can be seen in equation \ref{eq:total power}:
+
+\begin{equation}
+\label{eq:total power}
+P_{\text{dyn,tot}} = \sum_{i=1}^{n} P_{\text{dyn,i}} 
+\end{equation}
+where n is the total number of nodes in the design. 
+
+Equation \ref{eq: node eqauation} can be used to calculate the dynamic power dissipation for a partition which itself consists of a number of nodes. Hence, the dynamic power dissipation for a partition p is given by equation \ref{eq: partition power}:
+\begin{equation}
+\label{eq: partition power}
+P_{\text{dyn,p}} = \sum_{j=1}^{m} P_{\text{dyn,j}} 
+\end{equation}
+where m are the number of nodes inside the partition. 
+
+
+Each partition has control unit responsiblle for activation or deactivation of the entire partition. This control unit is always active instead of the partitions that are being controlled. Therefore, it is necessary to add the costs of this partition control unit. The power cost of a partition control unit, $P_{gc,p}$, can be calculated by equation \ref{eq:total power}. In equation \ref{eq:total power}, nodes were used to calculate total power dissipation. Replacing the number of nodes $n$ by the number of partitions $p$ in the entire design leads to the calculation of the total dynamic power dissipation of the design by taking additional partitioning costs into account. This is shown in equation \ref{eq:dynamic with partition power}:
+
+\begin{equation}
+\label{eq:dynamic with partition power}
+P_{\text{design}} = \sum_{j=1}^{p} P_{\text{dyn,p}} + P_{gc,p} 
+\end{equation}
+
+The run-time of the system is not taken into account in \ref{eq:dynamic with partition power}. By taking the run-time of the system into account, the delay d of entire design and of each partition is calculated using the power-delay product. Equation \ref{eq:pd_k} shows the power-delay product for a partition k:
+\begin{equation}
+PD_k = (P_{\text{dyn},k} * d_k) + (P_{\text{gc},k} \cdot d_l)
+\label{eq:pd_k}
+\end{equation}
+whereas $d_k$ is the delay of the partition and $d_i$ is the delay of the part of the circuit where partition k is embedded.
+
+The power-delay product of the entire design can now be calculated by summing up the power-delay product of all partition using the equation \ref{eq:tpd}:
+
+\begin{equation}
+TPD = \sum_{x=1}^{l} PD_x,
+\label{eq:tpd}
+\end{equation}
+
+whereas l is the number of design partitions.
+
+Generally a HLS system tries to minimize the delay D and area A of a design. With the TotalPowerDelay function we have another constraint power P minimized by a HLS system. Therefore, this equation \ref{eq:tpd} is used as a cost function by \cite{Ret}.
+
+
+\subsection{Path Analysis}
+\label{subsec: path analysis}
+The path analysis is the third step of the power scheduler as descirbed in \ref{subsec: power}. Path and path-time can be defined with the following definitions:
+
+\begin{definition}[PATH]
+\label{def:cfg}
+A path $p$, with $i \in \mathbb{N}$, is a connection from a source node $v_s$ to a destination node $v_e$ to transport a data-word within the DFG $G = (V_d, E_d)$, where $v_s$, $v_e \in V_d$. All nodes $v_i$ in $V_d$ between $v_s$ and $v_e$ and all nodes that are necessary to provide the correct operation of the path are objects: $p_{v_s,v_e,i} = \{v_j, \ldots, v_n\}$ with $j, n \in \mathbb{N}$ and index $i \in \mathbb{N}$.
+\end{definition}
+
+\begin{definition}[PATH-TIME]
+Let $time(p_{v_s,v_e,i})$ represent the time necessary to send one data-word from the start node $v_s$ to the end node $v_e$ of $p_{v_s,v_e,i}$.
+\end{definition}
+
+The path identification can be realized by Depth-First-Search (DPS), which traverses or searches graph data structures starting at the root node and explores as far as possible along each branch before backtracking. Extra memory, usually a stack, is needed to keep track of the nodes discovered so far along a specified branch which helps in backtracking of the graph.
+
+To find all disjoint paths, the DFG is slightly modified by including a virtual source and destination node. The source node is connected by edges with the primary inputs and constants of the DFG, because these are the only elements from where data goes into the circuit. In similarity, all primary outputs are connected by edges to the destination node, because output data goes only via the primary outputs to the environment where the circuit is embedded in. 
+
+For paths between fork and join nodes, the analysis starts from the fork towards the join node and all visited nodes to the path are added. If nodes with additional inputs or outputs are found on the path, they are followed to their primary inputs or outputs after which all visited nodes to the path are added. Already visited nodes are ignored. Assuming that operation * needs two timesteps and operation + one, the paths times are calculated using fig. \ref{fig:fork and join} as an example, where $P_{fork,join,i}$ (with i = 1 \ldots 3): 
+\begin{itemize}
+    \item $P_{fork,join,1}$ = \{*cm2, + , +\}, time($p_{fork,join,1}$) = 4
+    \item $P_{fork,join,2}$ = \{*cmo\}, time($p_{fork,join,2}$) = 2 
+    \item $P_{fork,join,3}$ = \{*cm1,+,*$c_s$\}, time($p_{fork,join,2}$) = 5
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Fork and join node.png}
+    \caption{Example for paths between fork and join node}
+    \label{fig:fork and join}
+\end{figure}
+
+Control nodes are examined by scheduling ASAP algorithm to allow the identification of alternative paths. Once more, those paths are the basis of the partitioning and they are combined to partitions. Fig. \ref{fig:control node} gives an example for the path analysis for control nodes. The node 'coder' controls the join node (in this case join corresponds to a multiplexer) and selects which of the inputs are directed to the output. If we can schedule and execute 'coder' before all other nodes, an additional timestep is needed, but we are able to activate only the used input path of the multiplexer. Therefore, we get three paths for our analysis:  
+
+\begin{itemize}
+    \item $P_{+,join,1}$ = \{ + , +\}, time($p_{+,join,1}$) = 2
+    \item $P_{*cm0,join,1}$ = \{*cm0 \}, time($p_{*cm0,join,1}$) = 2
+    \item $P_{*cm1,join,1}$ = \{*cm1, *$c_s$\}, time($p_{*cm0,join,1}$) = 4
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.7\linewidth]{control node.png}
+    \caption{Control Node}
+    \label{fig:control node}
+\end{figure}
+Obviously, depending on the characteristics and timing requirements of the design it may be not possible to schedule a control node by extending the run-time. Furthermore, all independent graphs in the CDFG forms a path for the partitioning.
+
+\subsection{Partitioning}
+\label{subsec: partitioning}
+A part of the MPEG-2 algorithm is used as an example to show how the power scheduler works. Three different conversion algorithms are used:
+\begin{itemize}
+    \item Vertical conversion (Motion estimation)
+    \item Horizontal conversion (Motion estimation)
+    \item CIF format conversion (changes chrominance value)
+\end{itemize}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{partition.png}
+    \caption{Partitioned design example}
+    \label{fig:partition}
+\end{figure}
+
+The path analysis for the example examines nine paths (named A to I) dis- played in fig. \ref{fig:partition}. These paths are used for the partitioning of the design. Hence, that independent graphs in the CDFG forms also a partition. To build the partitions by combining the paths that are calculated by the path analysis, we construct a compatibility graph, which is defined as follows:
+
+\begin{definition}[Compatibility Graph (CO)]
+\label{def:compatibility}
+Let $G = (V_k, E_k)$ be an undirected graph, where the set of nodes $V_k = \{v_1, v_2, \ldots, v_n\}$ corresponds to the number of paths in the CDFG (Control and Data Flow Graph). An edge $(v_i, v_j)$ with $v_i, v_j \in V_k$ exists in $E_k$ if there is no conflict between the nodes $v_i$ and $v_j$.
+\end{definition}
+
+Each path of the path analysis is a node in the compatibility graph. An edge between two nodes exists if they have no conflict and not the same start and end node. Two paths are in conflict to each other if they are depending from the same fork, join or control node. Therefore, those paths have no edge between each other in the compatibility graph. Furthermore, the path time is recognized. Then a clique search algorithm [1] is used to find cliques in the compatibility graph. clique search algorithm [1] is used to find cliques in the compatibility graph. The clique algorithm found three cliques for our design example (see Figure 6). Therefore, partitions  $P_1$= {A, F, G}, $P_2$ = {C, D, H} and $P_3$ = {£", /} can be activated or deactivated during run-time to save energy. Finally, node B builds an own partition.
+
+\subsection{Result}
+As per \cite{10.1007/978-0-387-39362-9_24} and \cite{1581203}, an energy saving of 15 \% is achieved with the power scheduler in comparison to a not partitioned design. The cost function is used 
+
+
+\section{Conclusion}
+\label{sec: conclusion}
+In this paper, an approach for low power driven synthesis is discussed inspired from \cite{Rett}. The implemented Power Scheduler contains all developed methods and allows the integration of power saving at a high abstraction level. The presented example, part of the MPEG-2 algorithm, demonstrates the effectiveness of the method.
+
+In this paper,an approach for low power driven synthesis is disussed. The Power Scheduler, introduced and developed, by \cite{Ret} is the primary focus of the paper. This scheduler reads a CDFG and writes a scheduled and partitioned CDFG. Besides the standard scheduling approaches, a path determination is applied which is the basis for the design partitioning. Each partition allows the integration of dedicated turn-on and turn-off mechanisms into the design. That means, if a partition is not active, it can be turned off to reduce power consumption and therefore energy. With the proposed power methods both the dynamic and the static power consumption is reduced by using power down. Prt of the MPEG-2 algorithm is used as to illustrate the Power Scheduler steps. All developed methods are discussed with the example. The example shows the impact and effectiveness of the Power Scheduler.
 \section*{Acknowledgment}
-
-The preferred spelling of the word ``acknowledgment'' in America is without 
-an ``e'' after the ``g''. Avoid the stilted expression ``one of us (R. B. 
-G.) thanks $\ldots$''. Instead, try ``R. B. G. thanks$\ldots$''. Put sponsor 
-acknowledgments in the unnumbered footnote on the first page.
-
-\section*{References}
+Most, if not all, contents of this paper are taken from the Phd. paper of Prof. Dr. Achim Rettberg. His guidance in class has allowed for clear and concise understanding of the importance of design at system level to to be able to reduce power using High Level Synthesis.
 
 
-Number footnotes separately in superscripts. Place the actual footnote at 
-the bottom of the column in which it was cited. Do not put footnotes in the 
-abstract or reference list. Use letters for table footnotes.
 
-Unless there are six authors or more give all authors' names; do not use 
-``et al.''. Papers that have not been published, even if they have been 
-submitted for publication, should be cited as ``unpublished'' \cite{b4}. Papers 
-that have been accepted for publication should be cited as ``in press'' \cite{b5}. 
-Capitalize only the first word in a paper title, except for proper nouns and 
-element symbols.
-
-For papers published in translation journals, please give the English 
-citation first, followed by the original foreign-language citation \cite{b6}.
-
-\begin{thebibliography}{00}
-\bibitem{b1} A. Rettberg, ``Low Power Driven High-Level Synthesis
-for Dedicated Architectures,'' Phd Thesis, University of Paderborn, Paderborn, North-Rhein Westphalia, December 2006.
-\bibitem{b2} Daniel D. Gajski, Nikil D. Dutt, Allen C-H Wu, and Steve Y-L Lin. High-Level Synthesis. Kluwer Academic Publishers, Boston/Dordrecht/London, 1992.
-\bibitem{b3} A. Rettberg and F. J. Rammig, "Integration of Energy Reduction into High-Level Synthesis by Partitioning," in IFIP International Federation for Information Processing, 2006, pp. 225-234. 
-\end{thebibliography}
-\vspace{12pt}
-\color{red}
+\printbibliography
 
 \end{document}
