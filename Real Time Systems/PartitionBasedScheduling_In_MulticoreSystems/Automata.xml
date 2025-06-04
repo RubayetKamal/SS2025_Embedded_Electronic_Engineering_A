@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>chan utilizationPassed, startScheduling, taskNotAllocated, tasksINqueue;
+int globalTime;
+const int NUM_TASKS = 4;
+const int ids[NUM_TASKS]             = {0, 1, 2, 3};
+const int execution_time[NUM_TASKS]  = {1, 2, 1, 2};
+const int period[NUM_TASKS]          = {5, 10, 4, 8};
+
+int remaining_time[NUM_TASKS];
+int deadline[NUM_TASKS];
+bool ready[NUM_TASKS]; 
+int running_task = -1; </declaration>
+	<template>
+		<name x="5" y="5">EDF</name>
+		<declaration>clock localTime;
+int i=0;</declaration>
+		<location id="id0" x="25" y="51">
+			<name x="-1" y="17">Idle</name>
+			<label kind="invariant" x="-60" y="76">localTime &lt;= period[i]</label>
+		</location>
+		<location id="id1" x="348" y="510">
+			<name x="331" y="476">Ready</name>
+			<label kind="invariant" x="271" y="518">localTime &lt;= remaining_time[i]</label>
+		</location>
+		<location id="id2" x="535" y="289">
+			<name x="525" y="255">Running</name>
+			<label kind="invariant" x="450" y="306">localTime &lt;= remaining_time[i]</label>
+		</location>
+		<location id="id3" x="739" y="59">
+			<name x="696" y="76">Finished</name>
+		</location>
+		<location id="id4" x="-144" y="272">
+			<name x="-171" y="238">TaskArrival</name>
+			<label kind="invariant" x="-204" y="289">globalTime&lt;=0</label>
+		</location>
+		<init ref="id4"/>
+		<transition id="id5">
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="guard" x="374" y="-34">i&gt;=4</label>
+			<label kind="assignment" x="374" y="-17">i=0</label>
+			<nail x="382" y="-42"/>
+		</transition>
+		<transition id="id6">
+			<source ref="id4"/>
+			<target ref="id4"/>
+			<label kind="synchronisation" x="-212" y="408">taskNotAllocated!</label>
+			<nail x="-195" y="399"/>
+			<nail x="-102" y="399"/>
+		</transition>
+		<transition id="id7">
+			<source ref="id4"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-119" y="153">globalTime&gt;=0</label>
+			<label kind="synchronisation" x="-85" y="187">utilizationPassed!</label>
+		</transition>
+		<transition id="id8">
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="guard" x="331" y="59">i&lt;=3</label>
+			<nail x="586" y="59"/>
+			<nail x="212" y="51"/>
+		</transition>
+		<transition id="id9">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="guard" x="527" y="127">localTime == remaining_time[i]</label>
+			<label kind="assignment" x="646" y="170">running_task = -1,
+localTime = 0,
+i = i +1</label>
+		</transition>
+		<transition id="id10">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="365" y="391">ready[i] &amp;&amp; running_task == -1</label>
+			<label kind="assignment" x="416" y="433">running_task = i,
+localTime = 0,
+remaining_time[i] -= execution_time[i]</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="93" y="246">localTime&gt;=period[i]</label>
+			<label kind="synchronisation" x="153" y="212">startScheduling!</label>
+			<label kind="assignment" x="34" y="289">ready[i] = true,
+remaining_time[i] = execution_time[i],
+deadline[i] = globalTime + period[i],
+localTime =0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Ticking</name>
+		<declaration>clock x;</declaration>
+		<location id="id12" x="0" y="0">
+			<name x="-10" y="-34">ticking</name>
+			<label kind="invariant" x="-17" y="34">true</label>
+		</location>
+		<init ref="id12"/>
+		<transition id="id13">
+			<source ref="id12"/>
+			<target ref="id12"/>
+			<label kind="assignment" x="-93" y="127">globalTime = globalTime + 1</label>
+			<nail x="-59" y="127"/>
+			<nail x="68" y="127"/>
+		</transition>
+	</template>
+	<template>
+		<name>Core</name>
+		<location id="id14" x="-187" y="-102">
+			<name x="-331" y="-110">WaitingForTasks</name>
+		</location>
+		<location id="id15" x="153" y="-102">
+			<name x="110" y="-136">AllocatingTasks</name>
+		</location>
+		<location id="id16" x="348" y="-102">
+			<name x="289" y="-136">SchedulingTasks</name>
+		</location>
+		<init ref="id14"/>
+		<transition id="id17">
+			<source ref="id16"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="238" y="-238">startScheduling?</label>
+			<nail x="238" y="-212"/>
+			<nail x="357" y="-212"/>
+		</transition>
+		<transition id="id18">
+			<source ref="id14"/>
+			<target ref="id14"/>
+			<label kind="synchronisation" x="-322" y="-187">taskNotAllocated?</label>
+			<nail x="-340" y="-238"/>
+			<nail x="-195" y="-238"/>
+		</transition>
+		<transition id="id19">
+			<source ref="id14"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="-110" y="-119">utilizationPassed?</label>
+		</transition>
+		<transition id="id20">
+			<source ref="id15"/>
+			<target ref="id16"/>
+			<label kind="synchronisation" x="178" y="-119">startScheduling?</label>
+		</transition>
+	</template>
+	<system>// Instantiate scheduler templates
+scheduler = EDF();
+allocator = Core();  // Assuming Core is your allocator or any other component you have
+timeManager = Ticking();
+// Declare the system
+system scheduler, allocator,timeManager;</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>
