@@ -66,7 +66,7 @@ rubayet.kamal@stud.hshl.de}
 \maketitle
 
 \begin{abstract}
-Systems with components of varying criticality often require stronger verification for high-criticality parts compared to low-criticality ones. In multi-core systems, partitioning reduces the complexity of scheduling by assigning partitions to different cores, allowing isolated execution with optional inter-partition communication. However, partitioned scheduling faces resource utilization challenges similar to the bin-packing problem: tasks may fail to be assigned to any processor even when sufficient total capacity exists. This inefficiency is particularly severe when tasks have high individual utilization, potentially limiting system resource usage to as little as half. Moreover, assigning tasks while maintaining load balance and predictability is an NP-hard problem. This paper explores the fundamentals of partition-based scheduling and examines heuristic allocation and scheduling algorithms. In \cite{AbdallahGB24}, the authors have used a clustering-based task allocation strategy with Earlest Deadline First (EDF) scheduling algorithm in each core. This strategy or technique is simulated using C and allocation of tasks are visualised using Python script.
+Systems with components of varying criticality often require stronger verification for high-criticality parts compared to low-criticality ones. In multi-core systems, partitioning reduces the complexity of scheduling by assigning partitions to different cores, allowing isolated execution with optional inter-partition communication. However, partitioned scheduling faces resource utilization challenges similar to the bin-packing problem: tasks may fail to be assigned to any processor even when sufficient total capacity exists. This inefficiency is particularly severe when tasks have high individual utilization, potentially limiting system resource usage to as little as half. Moreover, assigning tasks while maintaining load balance and predictability is an NP-hard problem. This paper explores the fundamentals of partition-based scheduling and examines heuristic allocation and scheduling algorithms. In \cite{AbdallahGB24}, the authors have used a clustering-based task allocation strategy with Earlest Deadline First (EDF) scheduling algorithm in each core. This strategy or technique is implemented in C and later simulated in UPPAAL. The allocation of tasks are visualised using Python script.
 
 
 % The study focuses on the clustering-based task allocation strategy implemented in \cite{b1}, which uses the Earliest Deadline First (EDF) scheduling algorithm to ensure that the utilization factor remains less than 1 and communication cost between cores is minimized. A simulation written in C based on the strategy implemented in \cite{b1} is done to visualise the distribution of tasks among different homoegenous cores. 
@@ -74,7 +74,7 @@ Systems with components of varying criticality often require stronger verificati
 \end{abstract}
 
 \begin{IEEEkeywords}
-multi-core, partition, EDF, styling, insert
+multi-core, partition, EDF, clustering, UPPAAL
 \end{IEEEkeywords}
 
 \section{Introduction}
@@ -94,8 +94,7 @@ To address this, semi-partitioned scheduling (a hybrid approach) has been propos
 
 EDF is
 a scheduling algorithm in which jobs with earliest deadlines have higher
-priority. EDF is an optimal scheduling algorithm on preemp-
-tive uniprocessors, in the following sense: if a collection of
+priority. EDF is an optimal scheduling algorithm on preemptive uniprocessors, in the following sense: if a collection of
 independent jobs can be scheduled (by any algorithm) such
 that all the jobs complete by their deadlines, EDF will schedule
 this collection of jobs such that they all complete by their
@@ -111,8 +110,8 @@ overload condition for multi-core systems. The purpose of this paper is to evalu
 The remainder of this paper is structured as follows: 
 Section~\ref{sec:fundamentals} presents the core concepts required for understanding real-time mixed critical systems along with multi-core architectures and multi-core scheduling strategies.
 Section~\ref{sec: partition-based scheduling} defines partition-based scheduling mechanisms, highlighting the differences between static and dynamic partitioning, and discussing the objectives and challenges associated with partitioning. The importance of task partitioning in mixed-criticality systems is also discussed. 
-Section~\ref{sec: clustering-based scheduling} outlines the clustering-based scheduling strategy and task allocation methodology, as originally proposed in~\cite{AbdallahGB24}.
-Section~\ref{sec:implementation} describes the implementation of the named algorithm using C code snippets. Thereafter, section \ref{sec: simulation and outcome} shows the outcome from simulation and discusses the key findings. 
+Section \ref{sec: clustering-based scheduling} outlines the clustering-based scheduling strategy and task allocation methodology, as originally proposed in~\cite{AbdallahGB24}. Additionally, it also 
+describes the implementation of the named algorithm using FreeRTOS Library in C. Furthermore, it also shows the outcome from simulation and discusses the key findings. 
 Finally, Section~\ref{subsec: conclusion} concludes the paper and summarizes the main contributions.
 
 
@@ -126,6 +125,17 @@ Before exploring the strategy implemented in this paper, it is necessary to disc
 \label{subsec:task and task types}
 A real-time system evolves as a function of physical time~\cite{kopetzDist}. A set of related jobs that execute to support a system function is called a task~\cite{9999}. Therefore, a real-time task is primarily defined by its temporal properties.
 
+Real-time tasks can be classified as either \textit{periodic} or \textit{aperiodic}:
+\begin{itemize}
+    \item \textbf{Periodic Tasks}: These tasks consist of an infinite sequence of identical activities, called instances or jobs, that are activated regularly at a constant rate~\cite{butazo99}. Periodic tasks are characterized by strict deadlines and form the majority of tasks in a real-time application. 
+    %According to~\cite{french18}, a periodic task $\tau_i$ is typically modeled by four parameters: $(R_i, W_i, D_i, P_i)$~\cite{AbdallahGB24}.
+    
+    \item \textbf{Aperiodic Tasks}: These tasks also consist of a sequence of identical jobs, but their activations are unpredictable and not evenly spaced. Aperiodic tasks are generally modeled by a single parameter, $W_i$, representing their worst-case execution time~\cite{AbdallahGB24}.
+\end{itemize}
+
+A special class of aperiodic tasks is \textit{sporadic tasks}~\cite{butazo99}. Sporadic tasks, while aperiodic in execution time, have their execution rate constrained by a minimum inter-arrival time. 
+%They are modeled by the parameters $(W_i, D_i, T_{\text{min}})$, where $T_{\text{min}}$ is the minimum time interval between two consecutive activations, and $D_i$ is the critical delay~\cite{AbdallahGB24}.
+
 According to~\cite{5465974}, a periodic task $\tau_i$ is characterized by two parameters:
 \begin{itemize}
     \item \textbf{Worst-Case Execution Time (WCET) $W_i$}: The maximum amount of time a task $\tau_i$ could take to execute.
@@ -133,31 +143,24 @@ According to~\cite{5465974}, a periodic task $\tau_i$ is characterized by two pa
 \end{itemize}
 These properties are assumed to be constant for all task instances in a homogeneous multi-core architecture.
 
-Additional temporal characteristics of real-time tasks, as listed in~\cite{AbdallahGB24}, include:
-\begin{itemize}
-    \item \textbf{Release Time or Arrival Time ($R_i$)}: The time at which a task $\tau_i$ becomes eligible to start execution.
-    \item \textbf{Deadline ($D_i$)}: The latest time by which the task must complete its execution.
-    \item \textbf{Latency ($L_i$)}: The remaining time before a task either starts execution or its deadline occurs.
-    \item \textbf{Laxity or Slack Time ($X_i$)}: The maximum time a task can be delayed after activation and still meet its deadline.
-\end{itemize}
+% Additional temporal characteristics of real-time tasks, as listed in~\cite{AbdallahGB24}, include:
+% \begin{itemize}
+%     \item \textbf{Release Time or Arrival Time ($R_i$)}: The time at which a task $\tau_i$ becomes eligible to start execution.
+%     \item \textbf{Deadline ($D_i$)}: The latest time by which the task must complete its execution.
+%     \item \textbf{Latency ($L_i$)}: The remaining time before a task either starts execution or its deadline occurs.
+%     \item \textbf{Laxity or Slack Time ($X_i$)}: The maximum time a task can be delayed after activation and still meet its deadline.
+% \end{itemize}
 
-Figure~\ref{fig:temporal_properties_of_task} illustrates the temporal properties of a real-time task.
+% Figure~\ref{fig:temporal_properties_of_task} illustrates the temporal properties of a real-time task.
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=1\linewidth]{Temporal properties of task.png}
-    \caption{Temporal properties of a task}
-    \label{fig:temporal_properties_of_task}
-\end{figure}
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=1\linewidth]{Temporal properties of task.png}
+%     \caption{Temporal properties of a task}
+%     \label{fig:temporal_properties_of_task}
+% \end{figure}
 
-Real-time tasks can be classified as either \textit{periodic} or \textit{aperiodic}:
-\begin{itemize}
-    \item \textbf{Periodic Tasks}: These tasks consist of an infinite sequence of identical activities, called instances or jobs, that are activated regularly at a constant rate~\cite{butazo99}. Periodic tasks are characterized by strict deadlines and form the majority of tasks in a real-time application. According to~\cite{french18}, a periodic task $\tau_i$ is typically modeled by four parameters: $(R_i, W_i, D_i, P_i)$~\cite{AbdallahGB24}.
-    
-    \item \textbf{Aperiodic Tasks}: These tasks also consist of a sequence of identical jobs, but their activations are unpredictable and not evenly spaced. Aperiodic tasks are generally modeled by a single parameter, $W_i$, representing their worst-case execution time~\cite{AbdallahGB24}.
-\end{itemize}
 
-A special class of aperiodic tasks is \textit{sporadic tasks}~\cite{butazo99}. Sporadic tasks, while aperiodic in execution time, have their execution rate constrained by a minimum inter-arrival time. They are modeled by the parameters $(W_i, D_i, T_{\text{min}})$, where $T_{\text{min}}$ is the minimum time interval between two consecutive activations, and $D_i$ is the critical delay~\cite{AbdallahGB24}.
 
 
 
@@ -167,7 +170,7 @@ A special class of aperiodic tasks is \textit{sporadic tasks}~\cite{butazo99}. S
 
 The performance of single-threaded processors has become increasingly limited by power constraints, prompting processor architects to adopt multi-core designs as a means to enhance performance. As Intel analyst Nathan stated, "multi-core processors are the inevitable product of Moore's Law." The growing demands of modern applications and the continued advancement of CPU manufacturing technologies—enabling the integration of a large number of transistors on a single chip—have driven the rapid development of multi-core processors~\cite{6234619}.
 
-Although multi-core technology is a hardware innovation, it requires corresponding software support to fully realize its potential. In essence, a multi-core processor integrates multiple processing cores on a single chip, allowing the system to leverage the abundance of transistor resources. This enables the exploitation of various levels of parallelism—such as instruction-level and thread-level parallelism—through concurrent core execution, thereby enhancing overall performance~\cite{6234619}.
+% Although multi-core technology is a hardware innovation, it requires corresponding software support to fully realize its potential. In essence, a multi-core processor integrates multiple processing cores on a single chip, allowing the system to leverage the abundance of transistor resources. This enables the exploitation of various levels of parallelism—such as instruction-level and thread-level parallelism—through concurrent core execution, thereby enhancing overall performance~\cite{6234619}.
 
 Increasing the number of cores in a processor not only improves parallel task execution but also enhances energy efficiency. Multi-core systems can deliver higher performance by using several low-frequency cores instead of a single high-frequency core, offering both flexibility and power savings.
 
@@ -191,22 +194,31 @@ Multi-core processors can be categorized as either \textit{homogeneous} or \text
 \label{subsec: scheduling approach on multicore architecture}
 When a single processor has to execute a set of concurrent tasks – that is, tasks that can overlap in time – the CPU has to be assigned to the various tasks according to a predefined criterion, called a scheduling policy. The set of rules that, at any time, determines the order in which tasks are executed is called a scheduling algorithm \cite{butazo99}.
 
-In many operating systems that allow dynamic task activation, the running task can be interrupted at any point, so that a more important task that arrives in the system can immediately gain the processor and does not need to wait in the ready queue. In this case, the running task is interrupted and inserted in the ready queue, while the CPU is assigned to the most important ready task that just arrived. The operation of suspending the running task and inserting it into the ready queue is called preemption as shown in fig. \ref{fig:preemption}  \cite{butazo99}. Preemptive scheduling typically allows higher efficiency, in the sense that it al-
-lows executing a real-time task sets with higher processor utilization \cite{butazo99}.
+In many operating systems that allow dynamic task activation, the running task can be interrupted at any point, so that a more important task that arrives in the system can immediately gain the processor and does not need to wait in the ready queue. In this case, the running task is interrupted and inserted in the ready queue, while the CPU is assigned to the most important ready task that just arrived. The operation of suspending the running task and inserting it into the ready queue is called preemption. Preemptive scheduling typically allows higher efficiency, in the sense that it allows executing a real-time task sets with higher processor utilization \cite{butazo99}.
 
-"Among the great variety of algorithms proposed for scheduling real-time tasks, the following main classes can be identified:
+Among many algorithms, heuristic scheduling algorithm is the focus of the paper. An algorithm is said to be heuristic if it is guided by a heuristic function in taking its scheduling decisions. A heuristic algorithm tends toward the optimal schedule, but does not guarantee finding it" \cite{butazo99}.
+
+For task scheduling, heuristic-based scheduling algorithms are common. These are usually classified into three classes:
+
 \begin{itemize}
-    \item Preemptive: In preemptive algorithms, the running task can be interrupted at any time to assign the processor to another active task, according to a predefined scheduling policy.
-    \item Non-preemtptive: In non-preemptive algorithms, a task, once started, is executed by the pro- cessor until completion. In this case, all scheduling decisions are taken as the task terminates its execution.
-    \item Static: Static algorithms are those in which scheduling decisions are based on fixed parameters, assigned to tasks before their activation.
-    \item Dynamic: Dynamic algorithms are those in which scheduling decisions are based on dynamic parameters that may change during system evolution.
-    \item Off-line: A scheduling algorithm is used off line if it is executed on the entire task set before tasks activation. The schedule generated in this way is stored in a table and later executed by a dispatcher.
-    \item Online: A scheduling algorithm is used online if scheduling decisions are taken at runtime every time a new task enters the system or when a running task terminates.
-    \item Optimal: An algorithm is said to be optimal if it minimizes some given cost function defined over the task set. When no cost function is defined and the only concern is to achieve a feasible schedule, then an algorithm is said to be optimal if it is able to find a feasible schedule, if one exists.
-    \item Heuristic: An algorithm is said to be heuristic if it is guided by a heuristic function in taking its scheduling decisions. A heuristic algorithm tends toward the optimal schedule, but does not guarantee finding it" \cite{butazo99}.
+    \item "Priority-based scheduling: priorities are calculated and assigned to the tasks which are then scheduled on the processors according to their priorities.
+    \item Duplication-based scheduling: while tasks are allocated to a processor, its parent (and predecessor) tasks are duplicated to occupy the idle times of the processor to eliminate the communication delay that occurs when message is passed from the parent tasks to the allotted task.
+    \item Cluster-based schedulin: Some tasks, that need to communicate among themselves, are grouped together to form a cluster. Clusters are then scheduled on to an available processor. The main problem arises when the number of clusters is greater than the number of processors. This leads to programming the communicating clusters on the same processor and which remains in the nearest processor" \cite{AbdallahGB24}.
 \end{itemize}
 
-Multi-core scheduling is a 2 dimensional problem. First, allocation problem (spatial organization) deter- mines for each tasks which core should run on. Second, scheduling problem (temporal organization) de- fines date and order execution of tasks \cite{AbdallahGB24}.
+% "Among the great variety of algorithms proposed for scheduling real-time tasks, the following main classes can be identified:
+% \begin{itemize}
+%     \item Preemptive: In preemptive algorithms, the running task can be interrupted at any time to assign the processor to another active task, according to a predefined scheduling policy.
+%     \item Non-preemtptive: In non-preemptive algorithms, a task, once started, is executed by the pro- cessor until completion. In this case, all scheduling decisions are taken as the task terminates its execution.
+%     \item Static: Static algorithms are those in which scheduling decisions are based on fixed parameters, assigned to tasks before their activation.
+%     \item Dynamic: Dynamic algorithms are those in which scheduling decisions are based on dynamic parameters that may change during system evolution.
+%     \item Off-line: A scheduling algorithm is used off line if it is executed on the entire task set before tasks activation. The schedule generated in this way is stored in a table and later executed by a dispatcher.
+%     \item Online: A scheduling algorithm is used online if scheduling decisions are taken at runtime every time a new task enters the system or when a running task terminates.
+%     \item Optimal: An algorithm is said to be optimal if it minimizes some given cost function defined over the task set. When no cost function is defined and the only concern is to achieve a feasible schedule, then an algorithm is said to be optimal if it is able to find a feasible schedule, if one exists.
+%     \item Heuristic: An algorithm is said to be heuristic if it is guided by a heuristic function in taking its scheduling decisions. A heuristic algorithm tends toward the optimal schedule, but does not guarantee finding it" \cite{butazo99}.
+% \end{itemize}
+
+Multi-core scheduling is a 2 dimensional problem. First, allocation problem (spatial organization) determines for each tasks which core should run on. Second, scheduling problem (temporal organization) defines date and order execution of tasks \cite{AbdallahGB24}.
 
 % The complexity of scheduling algorithms is of high relevance in dynamic real- time systems, where scheduling decisions must be taken on line during task execution. A polynomial algorithm is one whose time complexity grows as a polynomial function p of the input length n of an instance. The complexity of such algorithms is denoted by O(p(n)). Each algorithm whose complexity function cannot be bounded in that way is called an exponential time algorithm. In particular, NP is the class of all decision problems that can be solved in polynomial time by a nondeterministic Turing machine. According to \cite{butazo99}: "A problem Q is said to be NP-complete if Q ∈ NP and, for every Q′ ∈ NP, Q’ is polynomially transformable to Q. A decision problem Q is said to be NP-hard if all problems in NP are polynomially transformable to Q, but we cannot show that Q ∈ NP."
 
@@ -219,20 +231,14 @@ In particular, $\mathsf{NP}$ is the class of all decision problems that can be s
 \end{quote}
 
 
-An algorithm is said to be heuristic if it is guided by a heuristic function in taking its scheduling decisions. A heuristic algorithm tends toward the optimal schedule, but does not guarantee finding it. For task scheduling, heuristic-based scheduling algorithms are common. These are usually classified into three classes:
 
-\begin{itemize}
-    \item "Priority-based scheduling: priorities are calculated and assigned to the tasks which are then scheduled on the processors according to their priorities.
-    \item Duplication-based scheduling: while tasks are allocated to a processor, its parent (and predecessor) tasks are duplicated to occupy the idle times of the processor to eliminate the communication delay that occurs when message is passed from the parent tasks to the allotted task.
-    \item In cluster-based scheduling, some tasks, that need to communicate among themselves, are grouped together to form a cluster. Clusters are then scheduled on to an available processor. The main problem arises when the number of clusters is greater than the number of processors. This leads to programming the communicating clusters on the same processor and which remains in the nearest processor" \cite{AbdallahGB24}.
-\end{itemize}
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=1.2\linewidth]{preemption.png}
-    \caption{preemption}
-    \label{fig:preemption}
-\end{figure}
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=1.2\linewidth]{preemption.png}
+%     \caption{preemption}
+%     \label{fig:preemption}
+% \end{figure}
 
 
 \section{Partition-based Scheduling}
@@ -314,13 +320,13 @@ In~\cite{AbdallahGB24}, each core $C_k \ (k \in [1 \ldots P])$ schedules its ass
 Communication between cores is facilitated by a communication medium such as a bus or a Network-on-Chip (NoC). In NoC architectures, the communication cost between a pair of cores $C_k$ and $C_l$ depends on their relative distance and is denoted by $\text{Cost}_{C_k,C_l}$. Let $X_{C_k,C_l}$ be the cost of transferring one byte of data from core $C_k$ to core $C_l$. The cost matrix is defined as:
 
 \begin{equation}
-\text{Cost}_{C_k, C_l} =
-\begin{cases}
-X_{C_k, C_l}, & \text{if } k \ne l,\quad \forall k, l \in [1 \ldots P] \\
-0, & \text{otherwise}
+Cost_{C_k, C_l} = 
+\begin{cases} 
+X_{C_k, C_l} & \text{if } k \ne l,\ \forall k, l \in [1 \dots P] \\
+0 & \text{otherwise}
 \end{cases}
-\label{eq:cost_function}
 \end{equation}
+
 
 The total communication cost is obtained by multiplying $\text{Cost}_{C_k,C_l}$ with the volume of exchanged data, denoted by $SM_{i,j}$, which represents the size of the message exchanged between tasks $\tau_i$ and $\tau_j$ in bytes:
 
@@ -373,7 +379,6 @@ The complete working code of the implementation can be found in the following Gi
 
 \begin{table}[htbp]
 \centering
-\caption{Task Parameters}
 \label{tab:task_parameters}
 \begin{tabular}{|c|c|c|}
 \hline
@@ -388,6 +393,8 @@ The complete working code of the implementation can be found in the following Gi
 6 & 5 & 6 \\
 \hline
 \end{tabular}
+\vspace{0.5em}
+\caption{Task Parameters}
 \end{table}
 
 Table \ref{tab:task_dependency_matrix} shows the communication volume between tasks. It basically shows how much in bytes are being transferred as message from one task to another. The clustering logic checks if a task can be placed on a core that already has a communicating task and whether the resulting utilization stays under the maximum utilization threshold of 1.
@@ -395,7 +402,6 @@ Table \ref{tab:task_dependency_matrix} shows the communication volume between ta
 
 \begin{table}[htbp]
 \centering
-\caption{Task Dependency Matrix}
 \label{tab:task_dependency_matrix}
 \setlength{\tabcolsep}{2pt} % Reduce column padding
 \renewcommand{\arraystretch}{2} % Reduce row height
@@ -412,6 +418,8 @@ Table \ref{tab:task_dependency_matrix} shows the communication volume between ta
 \textbf{T6} & 0 & 0 & 0 & 0 & 7 & 0 & 0 \\
 \hline
 \end{tabular}
+\vspace{0.5em}
+\caption{Task Dependency Matrix}
 \end{table}
 
 
@@ -420,7 +428,7 @@ The points to notice are the following: Task 0,1,2 and 3 are in constant communi
 
 \subsection{Cost calculation}
 \label{subsec: cost calculation}
-Equations \ref{eq:cost_function} and \ref{eq:total_cost} dicussed in subsection \ref{sec: clustering-based scheduling} are used to calculate the total communication cost between cores. 
+Equations \ref{eq:total_cost} discussed in subsection \ref{sec: clustering-based scheduling} is used to calculate the total communication cost between cores. 
 
 The function \texttt{Calculating\_TotalCommunicationCost()} is responsible for computing the total communication cost incurred by the task-to-core mapping in a multi-core system. It begins by initializing a variable \texttt{totalCost} to zero. This variable accumulates the overall communication cost resulting from interactions between tasks assigned to different cores.
 
@@ -436,31 +444,31 @@ The product of these two terms gives the cost of communication between the selec
 
 The function continues this process for all combinations of core pairs and their respective assigned tasks. After all relevant combinations have been evaluated, the function returns \texttt{totalCost}, which reflects the complete communication burden introduced by the current allocation of tasks to cores. This metric is critical for assessing the efficiency of clustering algorithms in minimizing communication overhead.
 
-List \ref{lst:total_comm_cost} shows a code snippet of the implementation of calculating total communication cost. 
+%List \ref{lst:total_comm_cost} shows a code snippet of the implementation of calculating total communication cost. 
 
-\begin{lstlisting}[caption={Function to calculate total communication cost}, label={lst:total_comm_cost}]
-float Calculating_TotalCommunicationCost() {
-    float totalCost = 0.0;
+% \begin{lstlisting}[caption={Function to calculate total communication cost}, label={lst:total_comm_cost}]
+% float Calculating_TotalCommunicationCost() {
+%     float totalCost = 0.0;
 
-    for (int firstCore = 0; firstCore < numberOfCores; firstCore++) {
-        for (int secondCore = 0; secondCore < numberOfCores; secondCore++) {
+%     for (int firstCore = 0; firstCore < numberOfCores; firstCore++) {
+%         for (int secondCore = 0; secondCore < numberOfCores; secondCore++) {
 
-            for (int i = 0; i < cores[firstCore].num_tasks; i++) {
-                for (int j = 0; j < cores[secondCore].num_tasks; j++) {
+%             for (int i = 0; i < cores[firstCore].num_tasks; i++) {
+%                 for (int j = 0; j < cores[secondCore].num_tasks; j++) {
 
-                    int firstTask = cores[firstCore].assigned_tasks[i];
-                    int secondTask = cores[secondCore].assigned_tasks[j];
+%                     int firstTask = cores[firstCore].assigned_tasks[i];
+%                     int secondTask = cores[secondCore].assigned_tasks[j];
 
-    totalCost += costMatrix[firstCore][secondCore] * 
-                communicationVolume[firstTask][secondTask];
-                }
-            }
-        }
-    }
+%     totalCost += costMatrix[firstCore][secondCore] * 
+%                 communicationVolume[firstTask][secondTask];
+%                 }
+%             }
+%         }
+%     }
 
-    return totalCost;
-}
-\end{lstlisting}
+%     return totalCost;
+% }
+% \end{lstlisting}
 \subsection{Output}
 \label{subsec: Output}
 And finally, the output from the terminal is as follows, as already discussed from the implementation of total communication cost along with the clustering algorithm described in algorithm \ref{alg:cluster_assignment}. 
