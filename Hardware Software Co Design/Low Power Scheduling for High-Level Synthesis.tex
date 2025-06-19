@@ -23,6 +23,27 @@
   frame=single,
 }
 \usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{siunitx}
+
 
 % Define theorems and definitions
 \newtheorem{definition}{Definition}
@@ -73,7 +94,7 @@ rubayet.kamal@stud.hshl.de}
 \maketitle
 
 \begin{abstract}
-Low power design has become a critical factor in the technical and commercial success of modern hardware systems. High Level Synthesis (HLS) involves transforming a behavioral description into a structural RTL-level netlist through scheduling, allocation, and binding \cite{Ret} \cite{DDG92}.The aim of this paper is to discuss integrated low power methods within the scheduling process of the HLS performed in \cite{Ret}. The goal is to minimize switching activity and utilize low-power modules while meeting performance constraints, ultimately achieving a balance between size, performance, and energy efficiency. The scheduler discussed is known as the Power Scheduler \cite{Ret} which identifies mutually exclusive operation paths, analyzes their activity profiles, and partitions them using a compatibility graph and clique search algorithm. Each resulting partition has a controlled activation or deactivation mechanism meaning they can be switched off when not used. Finally, the paper presents an example, where the methods discussed is implemented. The example is the realization of different algorithms of the video processing in a so called Hardware-Accelerator (HW-Accelerator) based on the special asynchronous hardware.
+Low power design has become a critical factor in the technical and commercial success of modern hardware systems. High Level Synthesis (HLS) involves transforming a behavioral description into a structural RTL-level netlist through scheduling, allocation, and binding \cite{Ret} \cite{DDG92}.The aim of this paper is to discuss integrated low power methods within the scheduling process of the HLS performed in \cite{Ret}. The goal is to minimize switching activity and utilize low-power modules while meeting performance constraints, ultimately achieving a balance between size, performance, and energy efficiency. The scheduler discussed is known as the Power Scheduler \cite{Ret} which identifies mutually exclusive operation paths, analyzes their activity profiles, and partitions them using a compatibility graph and clique search algorithm. Each resulting partition has a controlled activation or deactivation mechanism meaning they can be switched off when not used. Finally, the paper presents an example, where the methods discussed is implemented.
 \end{abstract}
 % Traditional approaches often focus on power estimation at the RTL or gate level; however, design decisions made at the algorithmic and architectural level have a significantly greater impact on overall power consumption [x].
 \begin{IEEEkeywords}
@@ -100,7 +121,7 @@ All important issues regarding power must be addressed earlier in the cycle. Tha
 The method presented in this paper, inspired by \cite{Ret}, aims to integrate low-power techniques into the scheduling process of High-Level Synthesis (HLS) by defining partitions. During HLS, a behavioral description is mapped to a Register Transfer Level (RTL) structure. Starting with a Control-Data-Flow Graph (CDFG), the proposed method employs standard scheduling techniques and path analysis on the graph to identify regions that can be grouped into partitions. The main goal of the developed low power approach is to partition the design during the scheduling task of the HLS. Each partition allows the integration of dedicated activation or deactivation mechanisms into the design. That means, if a partition is not active, it can be turned off to reduce power consumption.
 
 
-The structure of the paper is as follows: Section \ref{sec: fundamentals} HLS along with various sources of power consumption are discussed. Additionally, an introduction to scheduling is provided before diving into the proposed power scheduler discussed in section \ref{sec: power scheduler}. The section describes in detail the developed Power Scheduler including all executed tasks (scheduling, path analysis and partitioning). Moreover, section \ref{sec: power scheduler} implements the proposed power scheduler in an example as part of the MPEG-2 algorithm. Finally, section \ref{sec: conclusion} concludes the paper and summarizes the main contributions. 
+The structure of the paper is as follows: Section \ref{sec: fundamentals} HLS along with various sources of power consumption are discussed. Additionally, an introduction to scheduling is provided before diving into the proposed power scheduler discussed in section \ref{sec: power scheduler}. The section describes in detail the developed Power Scheduler including all executed tasks (scheduling, path analysis and partitioning). Finally, section \ref{sec: conclusion} concludes the paper and summarizes the main contributions. 
 
 
 
@@ -240,8 +261,11 @@ The power scheduler discussed in this paper uses ASAP and ALAP scheduling to cal
 
 \section{Power Scheduler}\label{AA}
 \label{sec: power scheduler}
-The main goal of the developed low power approach is to partition the design during the scheduling task of the HLS. Each partition allows the integration of dedicated turn-on and turn-off mechanisms into the design. That means, if a partition is not active, it can be turned off to reduce power consumption. The partitioning is described in detail in the following sections. The methodology and experimental results are given in sections 3.3 and 3.11.
+The main goal of the developed low power approach is to partition the design during the scheduling task of the HLS. Each partition allows the integration of dedicated turn-on and turn-off mechanisms into the design. That means, if a partition is not active, it can be turned off to reduce power consumption. The partitioning is described in detail in the following sections. The methodology and experimental results are given in subsection 3.3 and 3.11. 
+
+The purpose of this section is to discuss a Power Scheduler developed in \cite{Ret}. This section is divided into seven subsections. Subsection \ref{subsec: overview} discusses in brief the work flow of the power scheduler. Subsection \ref{subsec: power reduction methods} discusses the methods used by the power scheduler to control power. Subsection \ref{subsec: cost function} introduces mathematical formation of the cost function used to compare partitioned energy consumption to un-partitioned design. Thereafter in subsection \ref{subsec: path analysis}, three different phases of path determination is shown in an example. In subsection \ref{subsec: compatibility graph}, using the paths determined in previous subsection, a table is formed to produce the compatibility which in turn is used to form the clique in subsection \ref{subsec: clique}. Finally, in subsection \ref{} 
 \subsection{Overview}
+\label{subsec: overview}
 Fig. \ref{fig:HLS Design Flow} shows the design flow for HLS. The aim of the work done in \cite{Ret} is to integrate low power methods within the scheduling process of HLS. The developed system, known as the power scheduler, is embedded into HLS design flow.The Power scheduler, a path-based scheduling technqiue, replaces the existing scheduler of a HLS system. Therefore, it is an alternative scheduling technique to integrate power reduction. It can be seen in fig. \ref{fig:power scheduler} that an unscheduled CDFG as an input produces a scheduled low-power CDFG. The CDFG represents the controller for the DFG and the DFG is the data-path of the given algorithm. Each node in CDFG correspond to operations and each directed edge represent data dependency. 
 
 The first goal is to have dedicated turn-on and turn-off mechanisms into the design and the second goal is to minimize the additional control componenets for the activation and deactivation of the partitions. This could be achieved by combining partitions. 
@@ -277,7 +301,7 @@ the clique approach a partition contains only one path.
 \begin{figure}[h!]
     \centering
     \includegraphics[width=1\linewidth]{Steps of the Power Scheduler.png}
-    \caption{Step of the power scheduler \cite{ret}}
+    \caption{Step of the power scheduler \cite{Ret}}
     \label{fig:steps of the power scheduler}
 \end{figure}
 
@@ -357,8 +381,29 @@ Let $time(p_{v_s,v_e,i})$ represent the time necessary to send one data-word fro
 
 The path identification can be realized by Depth-First-Search (DPS), which traverses or searches graph data structures starting at the root node and explores as far as possible along each branch before backtracking. Extra memory, usually a stack, is needed to keep track of the nodes discovered so far along a specified branch which helps in backtracking of the graph.
 
+
+\subsubsection{Disjoin Paths}
 To find all disjoint paths, the DFG is slightly modified by including a virtual source and destination node. The source node is connected by edges with the primary inputs and constants of the DFG, because these are the only elements from where data goes into the circuit. In similarity, all primary outputs are connected by edges to the destination node, because output data goes only via the primary outputs to the environment where the circuit is embedded in. 
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Disjoint path.png}
+    \caption{Disjoint path \cite{Ret}}
+    \label{fig:disjoint path}
+\end{figure}
+
+From fig. \ref{fig:disjoint path}, the following 5 disjoint paths have been identified:
+
+\begin{align*}
+\text{psrc,des,1} &= \{\ast cm5, \ast cm6, +, +, \ast c\,s\}\\
+\text{psrc,des,2} &= \{\ast cm0, \ast cm1, \ast cm2, +, +, +, \text{join a}, \ast c\,s\} \\
+\text{psrc,des,3} &= \{\ast cm3, \ast cm4, +, \ast c\,s\} \\
+\text{psrc,des,4} &= \{\ast cm7, \ast cm8, +, +, +, \text{join b}, \ast c\,s\} \\
+\text{psrc,des,5} &= \{\ast cm9, \ast cm10, +, \ast c\,s\}
+\end{align*}
+
+
+\subsubsection{Fork and Join Nodes}
 For paths between fork and join nodes, the analysis starts from the fork towards the join node and all visited nodes to the path are added. If nodes with additional inputs or outputs are found on the path, they are followed to their primary inputs or outputs after which all visited nodes to the path are added. Already visited nodes are ignored. Assuming that operation * needs two timesteps and operation + one, the paths times are calculated using fig. \ref{fig:fork and join} as an example, where $P_{fork,join,i}$ (with i = 1 \ldots 3): 
 \begin{itemize}
     \item $P_{fork,join,1}$ = \{*cm2, + , +\}, time($p_{fork,join,1}$) = 4
@@ -373,58 +418,180 @@ For paths between fork and join nodes, the analysis starts from the fork towards
     \label{fig:fork and join}
 \end{figure}
 
-Control nodes are examined by scheduling ASAP algorithm to allow the identification of alternative paths. Once more, those paths are the basis of the partitioning and they are combined to partitions. Fig. \ref{fig:control node} gives an example for the path analysis for control nodes. The node 'coder' controls the join node (in this case join corresponds to a multiplexer) and selects which of the inputs are directed to the output. If we can schedule and execute 'coder' before all other nodes, an additional timestep is needed, but we are able to activate only the used input path of the multiplexer. Therefore, we get three paths for our analysis:  
-
-\begin{itemize}
-    \item $P_{+,join,1}$ = \{ + , +\}, time($p_{+,join,1}$) = 2
-    \item $P_{*cm0,join,1}$ = \{*cm0 \}, time($p_{*cm0,join,1}$) = 2
-    \item $P_{*cm1,join,1}$ = \{*cm1, *$c_s$\}, time($p_{*cm0,join,1}$) = 4
-\end{itemize}
-
+\subsubsection{Control Nodes}
+Control nodes are examined by scheduling ASAP algorithm to allow the identification of alternative paths. Once more, those paths are the basis of the partitioning and they are combined to partitions. 
+Fig. \ref{fig:control node} shows the same diagram as in fig. \ref{fig:disjoint path} however to evaluate paths for fork and join nodes. All paths from the join nodes to the primary inputs or constants are examined. The figure shows two paths of node join a. As *cm1 is connected to both paths, it is not a member of the paths. 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.7\linewidth]{control node.png}
-    \caption{Control Node \cite{10.1007/978-0-387-39362-9_24}}
+    \includegraphics[width=1\linewidth]{Partitioning using Control Node.png}
+    \caption{Paths of join a and join b \cite{Ret} }
     \label{fig:control node}
 \end{figure}
-Obviously, depending on the characteristics and timing requirements of the design it may be not possible to schedule a control node by extending the run-time. Furthermore, all independent graphs in the CDFG forms a path for the partitioning.
 
-\subsection{Partitioning}
-\label{subsec: partitioning}
-A part of the MPEG-2 algorithm is used as an example to show how the power scheduler works. Three different conversion algorithms are used:
+The following path and respective time flow is found from fig. \ref{fig:control node}:
 \begin{itemize}
-    \item Vertical conversion (Motion estimation)
-    \item Horizontal conversion (Motion estimation)
-    \item CIF format conversion (changes chrominance value)
+    \item $P_{join a,src,1}$ = \{*cm0 , +\}, time($P_{join a,src,1}$) = 2
+    \item $P_{join a,src,2}$ = \{*cm2 ,+, +\}, time($P_{join a,src,2}$) = 2
+    \item $P_{join b,src,1}$ = \{+ , +\}, time($P_{join b,src,1}$) = 2
+    \item $P_{join b,src,2}$ = \{+\}, time($P_{join b,src,2}$) = 1    
 \end{itemize}
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=1\linewidth]{partition.png}
-    \caption{Partitioned design example \cite{10.1007/978-0-387-39362-9_24}}
-    \label{fig:partition}
-\end{figure}
 
-The path analysis for the example examines nine paths (named A to I) displayed in fig. \ref{fig:partition}. These paths are used for the partitioning of the design. Hence, that independent graphs in the CDFG forms also a partition. To build the partitions by combining the paths that are calculated by the path analysis, we construct a compatibility graph, which is defined as follows:
 
+
+% Fig. \ref{fig:control node} gives an example for the path analysis for control nodes. The node 'coder' controls the join node (in this case join corresponds to a multiplexer) and selects which of the inputs are directed to the output. If we can schedule and execute 'coder' before all other nodes, an additional timestep is needed, but we are able to activate only the used input path of the multiplexer. Therefore, we get three paths for our analysis:  
+
+% \begin{itemize}
+%     \item $P_{+,join,1}$ = \{ + , +\}, time($p_{+,join,1}$) = 2
+%     \item $P_{*cm0,join,1}$ = \{*cm0 \}, time($p_{*cm0,join,1}$) = 2
+%     \item $P_{*cm1,join,1}$ = \{*cm1, *$c_s$\}, time($p_{*cm0,join,1}$) = 4
+% \end{itemize}
+
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=0.7\linewidth]{control node.png}
+%     \caption{Control Node \cite{10.1007/978-0-387-39362-9_24}}
+%     \label{fig:control node}
+% \end{figure}
+% Obviously, depending on the characteristics and timing requirements of the design it may be not possible to schedule a control node by extending the run-time. Furthermore, all independent graphs in the CDFG forms a path for the partitioning.
+
+\subsection{Compatibility Graph}
+\label{subsec: compatibility graph}
 \begin{definition}[Compatibility Graph (CO)]
 \label{def:compatibility}
 Let $G = (V_k, E_k)$ be an undirected graph, where the set of nodes $V_k = \{v_1, v_2, \ldots, v_n\}$ corresponds to the number of paths in the CDFG (Control and Data Flow Graph). An edge $(v_i, v_j)$ with $v_i, v_j \in V_k$ exists in $E_k$ if there is no conflict between the nodes $v_i$ and $v_j$.
 \end{definition}
 
-Each path of the path analysis is a node in the compatibility graph. An edge between two nodes exists if they have no conflict and not the same start and end node. Two paths are in conflict to each other if they are depending from the same fork, join or control node. Therefore, those paths have no edge between each other in the compatibility graph. Furthermore, the path time is recognized. Then a clique search algorithm [1] is used to find cliques in the compatibility graph. The clique algorithm found three cliques for our design example (see fig. \ref{fig:partition}. Therefore, partitions  $P_1$= {A, F, G}, $P_2$ = {C, D, H} and $P_3$ = {E, I} can be activated or deactivated during run-time to save energy. Finally, node B builds an own partition.
+Each path of the path analysis is a node in the compatibility graph. An edge between two nodes exists if they have no conflict and not the same start and end node. Two paths are in conflict to each other if they are depending from the same fork, join or control node. Therefore, those paths have no edge between each other in the compatibility graph. Furthermore, the path time is recognized. Then a clique search algorithm is used to find cliques in the compatibility graph. 
+
+\[
+PC_{p_{x,y,i},p_{a,b,j}} =
+\begin{cases}
+\text{true} & \text{when } \left| time(p_{x,y,i}) - time(p_{a,b,j}) \right| \leq \beta \\
+            & \quad \land \left| st_{p_{x,y,i}} - st_{p_{a,b,j}} \right| \leq \varepsilon \\
+            & \quad \land\ \parbox[t]{5cm}{\centering $p_{x,y,i}$ and $p_{a,b,j}$ are timing and dataflow compatible} \\
+\text{false} & \text{else}
+\end{cases}
+\]
+
+
+
+That means, if $PC_{p_{x,y,i},p_{a,b,j}}$ is true , then there is an edge between node $p_{x,y,i}$ and $p_{a,b,j}$ in the compatibility graph.
+
+The Path Mobility is the minimal mobility of all nodes from the path. Hence, that we don’t take into account the influence of other paths in this definition. Therefore, a path itself as a union can only be moved by node with the minimal mobility. Path copies are also generated for similar paths with different start times. For \( p_{x,y,i} \), the following paths can be generated \( p'_{x,y,i} \) and \( p''_{x,y,i} \) with a path mobility of 2. 
+
+From fig. \ref{fig:disjoint path} and fig. \ref{fig:control node}, the following table can be summarised:
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Path} & \textbf{Path Mobility} & \textbf{Start Times} & \textbf{Path Copies} \\
+\hline
+$p_{src,des,1}$ & 1 & 0, 1 & $p'_{src,des,1}$ \\
+$p_{src,des,2}$ & 0 & 0 & \\
+$p_{src,des,3}$ & 2 & 0, 1, 2 & $p'_{src,des,3},\ p''_{src,des,3}$ \\
+$p_{src,des,4}$ & 0 & 0 & \\
+$p_{src,des,5}$ & 2 & 0, 1, 2 & $p'_{src,des,5},\ p''_{src,des,5}$ \\
+$p_{join\ a,src,1}$ & 1 & 0, 1 & $p'_{join\ a,src,1}$ \\
+$p_{join\ a,src,2}$ & 1 & 0, 1 & $p'_{join\ a,src,2}$ \\
+$p_{join\ b,src,1}$ & 0 & 1 & \\
+$p_{join\ b,src,2}$ & 1 & 1, 2 & $p'_{join\ b,src,2}$ \\
+\hline
+\end{tabular}
+\vspace{0.5em}
+\caption{Path properties and corresponding copies}
+\end{table}
+
+Therefore, the following table can be generated showing path compatibility:
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|c|p{6cm}|}
+\hline
+\textbf{Path} & \textbf{Compatible Paths} \\
+\hline
+$\mathit{p_{src,des,1}}$ & $\mathit{p_{src,des,2}},\ \mathit{p_{src,des,4}}$ \\
+$\mathit{p'_{src,des,1}}$ & $\mathit{p_{src,des,2}},\ \mathit{p_{src,des,4}}$ \\
+$\mathit{p_{src,des,2}}$ & $\mathit{p_{src,des,1}},\ \mathit{p'_{src,des,1}},\ \mathit{p_{src,des,4}}$ \\
+$\mathit{p_{src,des,3}}$ & $\mathit{p_{src,des,5}}$ \\
+$\mathit{p'_{src,des,3}}$ & $\mathit{p'_{src,des,5}}$ \\
+$\mathit{p''_{src,des,3}}$ & $\mathit{p''_{src,des,5}}$ \\
+$\mathit{p_{src,des,4}}$ & $\mathit{p_{src,des,1}},\ \mathit{p_{src,des,2}}$ \\
+$\mathit{p_{src,des,5}}$ & $\mathit{p_{src,des,3}}$ \\
+$\mathit{p'_{src,des,5}}$ & $\mathit{p'_{src,des,3}}$ \\
+$\mathit{p''_{src,des,5}}$ & $\mathit{p''_{src,des,3}}$ \\
+$\mathit{p_{join\ a,src,1}}$ & $\mathit{p_{join\ b,src,1}},\ \mathit{p_{join\ b,src,2}},\ \mathit{p'_{join\ b,src,2}}$ \\
+$\mathit{p'_{join\ a,src,1}}$ & $\mathit{p'_{join\ a,src,1}}$ \\
+$\mathit{p_{join\ a,src,2}}$ & $\mathit{p'_{join\ a,src,1}}$ \\
+$\mathit{p'_{join\ a,src,2}}$ & $\mathit{p'_{join\ a,src,1}}$ \\
+$\mathit{p_{join\ b,src,1}}$ & $\mathit{p'_{join\ a,src,1}}$ \\
+$\mathit{p_{join\ b,src,2}}$ & $\mathit{p'_{join\ a,src,1}}$ \\
+$\mathit{p'_{join\ b,src,2}}$ & $\mathit{p'_{join\ a,src,1}}$ \\
+\hline
+\end{tabular}
+\vspace{0.5em}
+\caption{Paths and their compatibilities.}
+\end{table}
+
+As already discussed that each path in the compatibility graph is a node and edge between two nodes exist if they have no conflict, the following the compatibility graph can be generated:
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Compatiblity graph.png}
+    \caption{Compatibility Graph}
+    \label{fig:compatibility graph}
+\end{figure}
+
+
+
+\subsection{Clique Search}
+\label{subsec: clique}
+A clique is a group of nodes where every node is connected to every other node. The maximum clique is the largest such group that can be found in the graph.
+
+The compatibility graph (CG) is built from compatible paths in the CDFG. Each clique in the CG becomes a control partition, which can be independently powered down when inactive — minimizing overall energy consumption.
+
+Two strategies are implemented in \cite{Ret} to ensure no path appears in more than one partition and paths with timing or dataflow conflicts are removed after placing a clique. Example: If a node $p'_{\text{src,des,3}}$ is selected in a clique, then $p_{\text{src,des,3}}$, $p''_{\text{src,des,3}}$ (its copies), and all conflicting paths are also deleted. The strategies are : 1) finding all cliques, 2) finding the maximum clique, delete its nodes and all conflicting nodes, and repeat until no more cliques are found.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\linewidth]{Clique.png}
+    \caption{Clique containing $p''_{\text{src,des,1}}$, $p''_{\text{src,des,2}}$, $p''_{\text{src,des,4}}$}
+    \label{fig:clique}
+\end{figure}
 
 \subsection{Result}
-As per \cite{10.1007/978-0-387-39362-9_24} and \cite{1581203}, an energy saving of 15 \% is achieved with the power scheduler in comparison to a not partitioned design. The cost function of equation \ref{eq:tpd} is used.
+\label{subsec: result}
+Table 3 shows the five partitions and the dynamic power consumption by each partition. Using \ref{eq:tpd} as the cost function, PowerDelay for unpartitioned design is \SI{1180000}{\micro\joule}. For the partitioned design, the PowerDelay is \SI{1008000}{\micro\joule}. Therefore an energy reduction of 14.6\% is achieved. 
+
+\begin{table}[h!]
+\centering
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Name} & \textbf{Partition} & \textbf{Power consumption} \\
+ & & $\boldsymbol{P_{dynamic, partition}}$ \\
+\hline
+$\mathit{A_1}$ & $\{\mathit{p_{src,des,1}},\ \mathit{p_{src,des,2}},\ \mathit{p_{src,des,4}}\}$ & $780\,\mu W/\mathit{MHz}$ \\
+$\mathit{A_2}$ & $\{\mathit{p_{src,des,3}},\ \mathit{p_{src,des,5}}\}$ & $400\,\mu W/\mathit{MHz}$ \\
+$\mathit{A_3}$ & $\{\mathit{p_{join\ b,src,1}},\ \mathit{p'_{join\ a,src,1}}\}$ & $120\,\mu W/\mathit{MHz}$ \\
+$\mathit{A_4}$ & $\{\mathit{p_{join\ a,src,2}}\}$ & $100\,\mu W/\mathit{MHz}$ \\
+$\mathit{A_5}$ & $\{\mathit{p_{join\ b,src,2}}\}$ & $20\,\mu W/\mathit{MHz}$ \\
+\hline
+\end{tabular}
+\vspace{0.5em}
+\caption{Partitions and power consumption.}
+\end{table}
+
 
 
 \section{Conclusion}
 \label{sec: conclusion}
-In this paper, an approach for low power driven synthesis is discussed inspired from \cite{Ret}. The implemented Power Scheduler contains all developed methods and allows the integration of power saving at a high abstraction level. The presented example, part of the MPEG-2 algorithm, demonstrates the effectiveness of the method.
-
-In this paper,an approach for low power driven synthesis is disussed. The Power Scheduler, introduced and developed, by \cite{Ret} is the primary focus of the paper. This scheduler reads a CDFG and writes a scheduled and partitioned CDFG. Besides the standard scheduling approaches, a path determination is applied which is the basis for the design partitioning. Each partition allows the integration of dedicated turn-on and turn-off mechanisms into the design. That means, if a partition is not active, it can be turned off to reduce power consumption and therefore energy. With the proposed power methods both the dynamic and the static power consumption is reduced by using power down. Prt of the MPEG-2 algorithm is used as to illustrate the Power Scheduler steps. All developed methods are discussed with the example. The example shows the impact and effectiveness of the Power Scheduler.
+In this paper,an approach for low power driven synthesis is disussed. The Power Scheduler, introduced and developed, by \cite{Ret} is the primary focus of the paper. This scheduler reads a CDFG and writes a scheduled and partitioned CDFG. Besides the standard scheduling approaches, a path determination is applied which is the basis for the design partitioning. Each partition allows the integration of dedicated turn-on and turn-off mechanisms into the design. That means, if a partition is not active, it can be turned off to reduce power consumption and therefore energy. With the proposed power methods both the dynamic and the static power consumption is reduced by using power down. 
 \section*{Acknowledgment}
-Most, if not all, contents of this paper are taken from the Phd. paper of Prof. Dr. Achim Rettberg. His guidance in class has allowed for clear and concise understanding of the importance of design at system level to to be able to reduce power using High Level Synthesis.
+Most, if not all, contents of this paper are taken from the Phd. paper of Prof. Dr. Achim Rettberg cited as \cite{Ret}. His guidance in class has allowed for clear and concise understanding of the importance of design at system level to to be able to reduce power using High Level Synthesis.
 
 
 
