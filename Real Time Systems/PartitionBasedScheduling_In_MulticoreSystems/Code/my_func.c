@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
-#include <stdbool.h>
+#include <stdbool.h> 
 #include "my_func.h"
 
 
@@ -185,7 +185,3 @@ void PrintingTaskAllocation() {
         printf("\n");
     }
 }
-
-
-
-
