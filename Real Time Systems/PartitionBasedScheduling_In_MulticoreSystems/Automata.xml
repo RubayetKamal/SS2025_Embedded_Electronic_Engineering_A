@@ -112,10 +112,10 @@ localTime =0</label>
 			<name x="-331" y="-110">WaitingForTasks</name>
 		</location>
 		<location id="id15" x="153" y="-102">
-			<name x="110" y="-136">AllocatingTasks</name>
+			<name x="85" y="-85">AllocatingTasks</name>
 		</location>
 		<location id="id16" x="348" y="-102">
-			<name x="289" y="-136">SchedulingTasks</name>
+			<name x="297" y="-85">SchedulingTasks</name>
 		</location>
 		<init ref="id14"/>
 		<transition id="id17">
@@ -128,7 +128,7 @@ localTime =0</label>
 		<transition id="id18">
 			<source ref="id14"/>
 			<target ref="id14"/>
-			<label kind="synchronisation" x="-322" y="-187">taskNotAllocated?</label>
+			<label kind="synchronisation" x="-331" y="-263">taskNotAllocated?</label>
 			<nail x="-340" y="-238"/>
 			<nail x="-195" y="-238"/>
 		</transition>
